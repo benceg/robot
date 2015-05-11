@@ -2,6 +2,8 @@ import config from '../../config/config.json';
 import Grid from './grid';
 import ObjectAssign from 'object-assign';
 
+Object.freeze(config);
+
 /**
  * The robot class
  */
@@ -78,7 +80,7 @@ export default class Robot {
    */
   validateF(f)
   {
-    return (typeof f === 'string' && typeof config.headings[heading] === 'object') ? true : false;
+    return (typeof f === 'string' && typeof config.headings[f] === 'object') ? true : false;
   }
   
   /**
@@ -87,12 +89,18 @@ export default class Robot {
    * @param {number} y - the Y coordinate of the location
    * @param {string} f - the compass heading of the location
    */
-  place(x, y, f)
+  place(x = 0, y = 0, f = 'NORTH')
   {
+    // X coordinate
     this.position.x = (this.validateX(x)) ? x : config.robot.position.x;
+    // Y coordinate
     this.position.y = (this.validateY(y)) ? y : config.robot.position.y;
-    this.position.r = (this.validateF(f)) ? config.headings[heading].r : config.headings[config.robot.position.f].r;
-    this.position.a = (this.validateF(f)) ? config.headings[heading].r : config.headings[config.robot.position.f].r;
+    // Heading
+    this.position.f = (this.validateF(f)) ? f : config.robot.position.f;
+    // Rotation
+    this.position.r = (this.validateF(f)) ? config.headings[f].r : config.headings[config.robot.position.f].r;
+    // Absolute rotation
+    this.position.a = (this.validateF(f)) ? config.headings[f].r : config.headings[config.robot.position.f].r;
     
     if (this.placed === false)
     {

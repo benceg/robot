@@ -105,9 +105,62 @@ describe('Robot', ()=> {
     
   });
   
+  describe('validateF', ()=> {
+    
+    let robot = new Robot();
+    
+    it('checks the config file for the appropriate heading title and sets rotation accordingly', ()=> {
+      
+      expect(robot.validateF('OTHER')).toBeFalsy();
+      expect(robot.validateF('NORTH')).toBeTruthy();
+      
+    });
+    
+  });
+  
   describe('place', ()=> {
     
+    var grid = new Grid({ columns : 3, rows : 3 });
+    var robot = new Robot();
+    
+    robot.connectTo(grid);
+    
+    beforeEach(function() {
+      spyOn(Robot.prototype, 'render').and.stub();
+      spyOn(Robot.prototype, 'animate').and.stub();
+    });
+    
     it('places the robot on the board at the desired coordinates and heading', ()=> {
+      
+      robot.place(2,2,'EAST');
+      
+      expect(robot.placed).toBeTruthy();
+      expect(robot.position.x).toBe(2);
+      expect(robot.position.y).toBe(2);
+      expect(robot.position.f).toBe('EAST');
+      expect(robot.render).toHaveBeenCalled();
+      expect(robot.animate).toHaveBeenCalled();
+      
+    });
+    
+    it('uses a default set of coordinates and heading if no position is specified', ()=> {
+      
+      robot.place();
+      
+      expect(robot.position.x).toBe(0);
+      expect(robot.position.y).toBe(0);
+      expect(robot.position.f).toBe('NORTH');
+      
+    });
+    
+    it('will ignore invalid placement', ()=> {
+      
+      robot.place(6,6,'OTHER');
+      
+      expect(robot.placed).toBeTruthy();
+      expect(robot.position.x).toBe(0);
+      expect(robot.position.y).toBe(0);
+      expect(robot.position.f).toBe('NORTH');
       
     });
     

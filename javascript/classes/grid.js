@@ -1,6 +1,8 @@
 import config from '../../config/config.json';
 import ObjectAssign from 'object-assign';
 
+Object.freeze(config);
+
 export default class Grid {
   
   constructor(args) {
