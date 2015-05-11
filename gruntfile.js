@@ -6,11 +6,20 @@ module.exports = function(grunt) {
 
   grunt.initConfig({
     
-    connect : {
+    concurrent: {
+      dev : ['webpack:dev', 'watch'],
       options : {
-        port : 3001,
-        hostname : "*",
-        base : "build"
+        logConcurrentOutput : true
+      }
+    },
+    
+    connect : {
+      dev : {
+        options : {
+          port : 8000,
+          hostname : "*",
+          base : "build"
+        }
       }
     },
     
@@ -24,14 +33,37 @@ module.exports = function(grunt) {
       documentation : ["documentation"]
     },
     
-    babel: {
-      options: {
-        sourceMap: true
-      },
-      dist: {
-        files: {
-          "build/main.js": "src/javascript/main.js"
+    webpack : {
+      options : {
+        module: {
+          loaders: [
+            {
+              test: /\.js$/,
+              exclude: /node_modules/,
+              loader: 'babel-loader'
+            },
+            {
+              test: /\.json$/,
+              exclude: /node_modules/,
+              loader: 'json-loader'
+            }
+          ]
         }
+      },
+      build : {
+        entry: "./javascript/main.js",
+        output: {
+          path: "build/",
+          filename: "main.js",
+        },
+        stats: {
+          colors: true,
+          modules: false,
+          reasons: true
+        },
+        progress: false,
+        watch: false,
+        keepalive: false
       }
     },
 
@@ -74,7 +106,7 @@ module.exports = function(grunt) {
           pretty: false
         },
         files: [{
-          cwd: "src/jade/",
+          cwd: "jade/",
           src: "*.jade",
           dest: "build",
           expand: true,
@@ -115,12 +147,12 @@ module.exports = function(grunt) {
     copy : {
       images : {
         files : [
-          {expand: true, cwd: "images/", src: ["**"], dest: "build/images/"}
+          {expand: true, cwd: "assets/images/", src: ["**"], dest: "build/images/"}
         ]
       },
       fonts : {
         files : [
-          {expand: true, cwd: "fonts/", src: ["**"], dest: "build/fonts/"}
+          {expand: true, cwd: "assets/fonts/", src: ["**"], dest: "build/fonts/"}
         ]
       }
     },
@@ -138,25 +170,25 @@ module.exports = function(grunt) {
         },
         files: ["build/**"],
       },
-      markup : {
-        files : ["src/jade/**"],
+      jade : {
+        files : ["jade/**"],
         tasks : ["jade"]
       },
       images : {
-        files : ["src/images/**"],
+        files : ["assets/images/**"],
         tasks : ["copy:images"]
       },
       fonts : {
-        files : ["src/fonts/**"],
+        files : ["assets/fonts/**"],
         tasks : ["copy:fonts"]
       },
       stylesheets : {
-        files : ["src/stylus/**"],
+        files : ["stylus/**"],
         tasks : ["stylus"]
       },
       scripts : {
-        files : ["src/js/**", "config/*.json"],
-        tasks : ["babel"]
+        files : ["javascript/**"],
+        tasks : ["webpack:build"]
       }
     }
 
@@ -164,7 +196,7 @@ module.exports = function(grunt) {
   
   grunt.registerTask("test", ["karma"]);
   grunt.registerTask("document", ["clean"], ["jsdoc"]);
-  grunt.registerTask("default", ["connect", "copy:images", "copy:fonts", "stylus", "babel", "watch"]);
-  grunt.registerTask("make", ["copy:images", "copy:fonts", "stylus", "csso", "babel", "uglify", "watch"]);
+  grunt.registerTask("default", ["connect:dev", "copy:images", "copy:fonts", "jade", "stylus", "webpack", "watch"]);
+  grunt.registerTask("make", ["copy:images", "copy:fonts", "jade", "stylus", "csso", "webpack:build", "uglify"]);
 
 };

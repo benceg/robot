@@ -8,7 +8,7 @@ module.exports = function(config) {
     browsers : ['PhantomJS'],
     
     frameworks : ['jasmine'],
-  
+    
     files : ['test/**/*.js'],
     
     preprocessors : {
@@ -36,6 +36,11 @@ module.exports = function(config) {
             test : /(\.js)$/,
             exclude : /(test|node_modules)\//,
             loader : 'isparta-instrumenter-loader'
+          },
+          {
+            test: /\.json$/,
+            exclude: /(node_modules)\//,
+            loader: 'json-loader'
           }
         ]
       }

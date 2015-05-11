@@ -1,0 +1,66 @@
+{
+  
+  "grid" : {
+    "container" : "body",
+    "rows" : 5,
+    "columns" : 5,
+    "size" : 100
+  },
+  
+  "robot" : {
+    "name" : "Robot",
+    "speed" : 1000,
+    "position" : {
+      "x" : 0,
+      "y" : 0,
+      "f" : "NORTH"
+    },
+    "sounds" : {
+      "move" : "",
+      "rotate" : ""
+    }
+  },
+  
+  "increment" : 90,
+  
+  "headings" : {
+    "NORTH" : {
+      "r" : 0,
+      "x" : 0,
+      "y" : 1
+    },
+    "EAST" : {
+      "r" : 90,
+      "x" : 1,
+      "y" : 0
+    },
+    "SOUTH" : {
+      "r" : 180,
+      "x" : 0,
+      "y" : -1
+    },
+    "WEST" : {
+      "r" : 270,
+      "x" : -1,
+      "y" : 0
+    }
+  },
+  
+  "mappings" : {
+    "32" : {
+      "command" : "place"
+    },
+    "39" : {
+      "command" : "rotate",
+      "arguments" : ["right"]
+    },
+    "37" : {
+      "command" : "rotate",
+      "arguments" : ["left"]
+    },
+    "38" : {
+      "command" : "move"
+    }
+  }
+  
+}
