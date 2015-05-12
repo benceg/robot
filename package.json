@@ -39,7 +39,6 @@
     "mumble-js": "^1.0.1",
     "object-assign": "^2.0.0",
     "phantomjs": "^1.9.16",
-    "speechjs": "0.0.1",
     "stylus": "^0.51.1",
     "webpack": "^1.9.4"
   }
