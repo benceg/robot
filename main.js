@@ -178,6 +178,7 @@
 	    key: 'stopRotate',
 	    value: function stopRotate(event) {
 	      if (startX || startY) {
+	        event.preventDefault();
 	        startX = null;
 	        startY = null;
 	        document.documentElement.removeAttribute('data-dragging');
@@ -186,21 +187,23 @@
 	  }, {
 	    key: 'rotate',
 	    value: function rotate(event) {
-	      event.preventDefault();
-
 	      if (startX && startY) {
+	        event.preventDefault();
 	        this.offsetX = this.clamp(this.checkTouch(event).pageX - startX, 60);
-	        this.offsetY = this.clamp(this.checkTouch(event).pageY - startY, 60);
+	        this.offsetY = this.clamp(this.checkTouch(event).pageY - startY, 60, 0);
 	        this.canvas.parentNode.style.transform = 'perspective(1000px) rotateX(' + this.offsetY + 'deg) rotateZ(' + this.offsetX + 'deg)';
 	      }
 	    }
 	  }, {
 	    key: 'clamp',
-	    value: function clamp(value, _clamp) {
-	      if (value > _clamp) {
-	        return _clamp;
-	      } else if (value < -_clamp) {
-	        return -_clamp;
+	    value: function clamp(value) {
+	      var max = arguments[1] === undefined ? 60 : arguments[1];
+	      var min = arguments[2] === undefined ? 60 : arguments[2];
+
+	      if (value > max) {
+	        return max;
+	      } else if (value < -min) {
+	        return -min;
 	      } else {
 	        return value;
 	      }
@@ -398,7 +401,7 @@
 	     * Manoeuvres the robot according to its current state
 	     */
 	    value: function animate() {
-	      this.robot.style.transform = 'translate3d(' + this.position.x * this.grid.size + 'px, -' + this.position.y * this.grid.size + 'px, 0) rotate(' + this.position.a + 'deg)';
+	      this.robot.style.transform = 'translate3d(' + this.position.x * this.grid.size + 'px, -' + this.position.y * this.grid.size + 'px, 10px) rotate(' + this.position.a + 'deg)';
 	      this.robot.setAttribute('data-heading', this.position.f.toLowerCase());
 	    }
 	  }, {
