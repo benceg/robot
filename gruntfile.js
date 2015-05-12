@@ -71,7 +71,6 @@ module.exports = function(grunt) {
       options : {
         mangle : true,
         compress : true,
-        screwIE8 : true,
         report : "gzip"
       },
       build : {
