@@ -1,6 +1,12 @@
+import Robot from './robot';
+
 export default class Parser {
   
-  constructor() {
+  constructor(robot) {
+    
+    if (!robot instanceof Robot) {
+      throw new Error('Parser needs to connect to an instantiated robot');
+    }
     
   }
   
@@ -9,6 +15,10 @@ export default class Parser {
   }
   
   parse() {
+    
+  }
+  
+  listen() {
     
   }
   
