@@ -67,6 +67,7 @@ export default class Grid
   {
     if (startX || startY)
     {
+      event.preventDefault();
       startX = null;
       startY = null;
       document.documentElement.removeAttribute('data-dragging');
@@ -75,22 +76,21 @@ export default class Grid
   
   rotate(event)
   {
-    event.preventDefault();
-    
     if(startX && startY)
     {
+      event.preventDefault();
       this.offsetX = this.clamp((this.checkTouch(event).pageX - startX), 60);
-      this.offsetY = this.clamp((this.checkTouch(event).pageY - startY), 60);
-      this.canvas.parentNode.style.transform = `rotateX(${this.offsetY}deg) rotateZ(${this.offsetX}deg)`;
+      this.offsetY = this.clamp((this.checkTouch(event).pageY - startY), 60, 0);
+      this.canvas.parentNode.style.transform = `perspective(1000px) rotateX(${this.offsetY}deg) rotateZ(${this.offsetX}deg)`;
     }
   }
   
-  clamp(value, clamp)
+  clamp(value, max = 60, min = 60)
   {
-    if (value > clamp) {
-      return clamp;
-    } else if (value < -clamp) {
-      return -(clamp);
+    if (value > max) {
+      return max;
+    } else if (value < -min) {
+      return -(min);
     } else {
       return value;
     }

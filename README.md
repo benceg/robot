@@ -1,6 +1,9 @@
-# robot
-Robot Prototype
+# Robot
 
 ---
 
-A foray into grid-based game development.
+https://benceg.github.io/robot/
+
+ECMAScript 6 for Roomba cats.
+
+Works in the Evergreens.
