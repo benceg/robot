@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', ()=> {
   
   grid.createCanvas();
   grid.layout();
+  grid.listen();
   
   robot.connectTo(grid);
   robot.listen();

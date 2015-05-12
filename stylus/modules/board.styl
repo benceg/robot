@@ -1,3 +1,7 @@
+[data-dragging]
+  *
+    cursor grabbing !important
+
 body
   text-align center
 
@@ -6,9 +10,10 @@ body
   display inline-block
   overflow hidden
   position relative
-  transform perspective(1000px) rotateX(45deg) rotateZ(15deg)
   
   canvas
     display block
     margin 0 auto
     transform-origin 50% 50%
+    background yellow
+    cursor grab

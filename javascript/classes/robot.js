@@ -41,6 +41,7 @@ export default class Robot {
   animate()
   {
     this.robot.style.transform = `translate3d(${this.position.x * this.grid.size}px, -${this.position.y * this.grid.size}px, 0) rotate(${this.position.a}deg)`;
+    this.robot.setAttribute('data-heading', this.position.f.toLowerCase());
   }
   
   /**
