@@ -4,12 +4,13 @@
 
 body
   text-align center
+  perspective 1000px
 
 #board
   margin-top 100px
   display inline-block
-  overflow hidden
   position relative
+  transform-style preserve-3d
   
   canvas
     display block
@@ -17,3 +18,4 @@ body
     transform-origin 50% 50%
     background yellow
     cursor grab
+    transform rotateX(0)
