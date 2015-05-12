@@ -1,0 +1,47 @@
+[data-dragging] * {
+  cursor: -webkit-grabbing !important;
+  cursor: grabbing !important;
+}
+body {
+  text-align: center;
+}
+#board {
+  margin-top: 100px;
+  display: inline-block;
+  overflow: hidden;
+  position: relative;
+}
+#board canvas {
+  display: block;
+  margin: 0 auto;
+  -webkit-transform-origin: 50% 50%;
+      -ms-transform-origin: 50% 50%;
+          transform-origin: 50% 50%;
+  background: #ff0;
+  cursor: -webkit-grab;
+  cursor: grab;
+}
+#robot {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #000;
+  transition: -webkit-transform 1s;
+  transition: transform 1s;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  margin: calc(70px - 40px);
+}
+#robot:before {
+  display: block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #f00;
+  content: "";
+  position: absolute;
+  top: 5px;
+  left: 50%;
+  margin-left: -5px;
+}
