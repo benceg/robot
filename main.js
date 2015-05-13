@@ -56,13 +56,17 @@
 
 	var _classesRobot2 = _interopRequireDefault(_classesRobot);
 
-	var _classesParser = __webpack_require__(5);
+	var _classesReporter = __webpack_require__(5);
 
-	var _classesParser2 = _interopRequireDefault(_classesParser);
+	var _classesReporter2 = _interopRequireDefault(_classesReporter);
 
-	var _classesSpeech = __webpack_require__(6);
+	var _classesTextParser = __webpack_require__(6);
 
-	var _classesSpeech2 = _interopRequireDefault(_classesSpeech);
+	var _classesTextParser2 = _interopRequireDefault(_classesTextParser);
+
+	var _classesSpeechParser = __webpack_require__(8);
+
+	var _classesSpeechParser2 = _interopRequireDefault(_classesSpeechParser);
 
 	var grid = new _classesGrid2["default"]({
 	  container: "#board",
@@ -74,9 +78,10 @@
 	  name: "Roomba"
 	});
 
-	var parser = new _classesParser2["default"](robot);
+	var reporter = new _classesReporter2["default"]("#report");
 
-	var speech = new _classesSpeech2["default"](robot);
+	var textParser = new _classesTextParser2["default"](robot);
+	var speechParser = new _classesSpeechParser2["default"](robot);
 
 	document.addEventListener("DOMContentLoaded", function () {
 
@@ -87,9 +92,10 @@
 	  robot.connectTo(grid);
 	  robot.listen();
 
-	  parser.listen();
+	  textParser.listen();
+	  // speechParser.listen();
 
-	  speech.listen();
+	  reporter.listen();
 	});
 
 /***/ },
@@ -132,18 +138,6 @@
 	  }
 
 	  _createClass(Grid, [{
-	    key: 'layout',
-	    value: function layout() {
-	      if (!this.ctx || !this.ctx instanceof CanvasRenderingContext2D) {
-	        throw new Error('Grid.ctx is not a canvas element');
-	      }
-	      for (var y = 0; y < this.rows; y++) {
-	        for (var x = 0; x < this.columns; x++) {
-	          this.draw(x, y);
-	        }
-	      }
-	    }
-	  }, {
 	    key: 'createCanvas',
 	    value: function createCanvas() {
 	      this.canvas = document.createElement('canvas');
@@ -154,10 +148,27 @@
 	      this.ctx = this.canvas.getContext('2d');
 	    }
 	  }, {
+	    key: 'layout',
+	    value: function layout() {
+	      this.ctx.strokeStyle = this.lines.color;
+	      this.ctx.lineWidth = this.lines.width;
+	      if (!this.ctx || !this.ctx instanceof CanvasRenderingContext2D) {
+	        throw new Error('Grid.ctx is not a canvas element');
+	      }
+	      for (var y = 0; y < this.rows; y++) {
+	        for (var x = 0; x < this.columns; x++) {
+	          this.draw(x, y);
+	        }
+	      }
+	    }
+	  }, {
 	    key: 'draw',
 	    value: function draw(x, y) {
-	      this.ctx.moveTo(x * this.size, y * this.size);
-	      this.ctx.strokeRect(x * this.size, y * this.size, x * this.size + this.size, y * this.size + this.size);
+	      var fromX = x * this.size + this.lines.width / 2;
+	      var fromY = y * this.size + this.lines.width / 2;
+	      var toX = this.size - this.lines.width;
+	      var toY = this.size - this.lines.width;
+	      this.ctx.strokeRect(fromX, fromY, toX, toY);
 	    }
 	  }, {
 	    key: 'checkTouch',
@@ -232,11 +243,17 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = {
+		"language": "en-GB",
+		"digest": 1000,
 		"grid": {
 			"container": "body",
 			"rows": 5,
 			"columns": 5,
-			"size": 100
+			"size": 100,
+			"lines": {
+				"color": "rgba(0,0,0,0.3)",
+				"width": 3
+			}
 		},
 		"robot": {
 			"name": "Robot",
@@ -246,6 +263,7 @@
 				"y": 0,
 				"f": "NORTH"
 			},
+			"hover": 10,
 			"sounds": {
 				"move": "",
 				"rotate": ""
@@ -275,6 +293,9 @@
 			}
 		},
 		"mappings": {
+			"13": {
+				"command": "report"
+			},
 			"32": {
 				"command": "place"
 			},
@@ -293,7 +314,39 @@
 					"right"
 				]
 			}
-		}
+		},
+		"commands": [
+			{
+				"name": "place",
+				"command": "^place$",
+				"action": "place"
+			},
+			{
+				"name": "place_at",
+				"command": "^place X?([0-9]+)\\,?\\s?Y?([0-9]+)\\,?\\s?(North|East|South|West)$",
+				"action": "place"
+			},
+			{
+				"name": "move",
+				"command": "^move$",
+				"action": "move"
+			},
+			{
+				"name": "left",
+				"command": "^left$",
+				"action": "left"
+			},
+			{
+				"name": "right",
+				"command": "^right$",
+				"action": "right"
+			},
+			{
+				"name": "report",
+				"command": "^report$",
+				"action": "report"
+			}
+		]
 	}
 
 /***/ },
@@ -373,6 +426,7 @@
 	    _classCallCheck(this, Robot);
 
 	    _objectAssign2['default'](this, _configConfigJson2['default'].robot, args);
+
 	    /** @type {boolean} */
 	    this.placed = false;
 	    /** @type {boolean} */
@@ -391,6 +445,8 @@
 	     */
 	    value: function render() {
 	      this.robot = document.createElement('div');
+	      this.robot.style.width = this.robot.style.height = '' + this.grid.size * 0.6 + 'px';
+	      this.robot.style.margin = '' + this.grid.size * 0.2 + 'px';
 	      this.robot.id = 'robot';
 	      this.grid.el.appendChild(this.robot);
 	    }
@@ -401,7 +457,7 @@
 	     * Manoeuvres the robot according to its current state
 	     */
 	    value: function animate() {
-	      this.robot.style.transform = 'translate3d(' + this.position.x * this.grid.size + 'px, -' + this.position.y * this.grid.size + 'px, 10px) rotate(' + this.position.a + 'deg)';
+	      this.robot.style.transform = 'translate3d(' + this.position.x * this.grid.size + 'px, -' + this.position.y * this.grid.size + 'px, ' + _configConfigJson2['default'].robot.hover + 'px) rotate(' + this.position.a + 'deg)';
 	      this.robot.setAttribute('data-heading', this.position.f.toLowerCase());
 	    }
 	  }, {
@@ -457,10 +513,13 @@
 	     * @param {string} f - the compass heading of the location
 	     */
 	    value: function place() {
-	      var x = arguments[0] === undefined ? 0 : arguments[0];
-	      var y = arguments[1] === undefined ? 0 : arguments[1];
-	      var f = arguments[2] === undefined ? 'NORTH' : arguments[2];
+	      var X = arguments[0] === undefined ? 0 : arguments[0];
+	      var Y = arguments[1] === undefined ? 0 : arguments[1];
+	      var F = arguments[2] === undefined ? 'NORTH' : arguments[2];
 
+	      var x = parseInt(X);
+	      var y = parseInt(Y);
+	      var f = F.toUpperCase();
 	      // X coordinate
 	      this.position.x = this.validateX(x) ? x : _configConfigJson2['default'].robot.position.x;
 	      // Y coordinate
@@ -478,16 +537,6 @@
 	      }
 
 	      this.animate();
-	    }
-	  }, {
-	    key: 'report',
-	    value: function report() {
-	      var log = {
-	        X: this.position.x,
-	        Y: this.position.y,
-	        F: this.position.f
-	      };
-	      console.log(log);
 	    }
 	  }, {
 	    key: 'move',
@@ -546,6 +595,48 @@
 	      }
 	    }
 	  }, {
+	    key: 'left',
+
+	    /**
+	     * Proxy function to rotate from speech and text parser
+	     */
+	    value: function left() {
+	      this.rotate('left');
+	    }
+	  }, {
+	    key: 'right',
+
+	    /**
+	     * Proxy function to rotate from speech and text parser
+	     */
+	    value: function right() {
+	      this.rotate('right');
+	    }
+	  }, {
+	    key: 'report',
+
+	    /**
+	     * Announces the position and bearing of the robot
+	     */
+	    value: function report() {
+	      var log = { coords: false, message: false };
+
+	      if (this.placed === true) {
+	        log.coords = {
+	          X: this.position.x,
+	          Y: this.position.y,
+	          F: this.position.f
+	        };
+	        log.message = '' + this.name + ' is at X' + this.position.x + ', Y' + this.position.y + ' and facing ' + this.position.f.toLowerCase();
+	      } else {
+	        log.coords = false;
+	        log = '' + this.name + ' is not yet on the board';
+	      }
+
+	      var event = new CustomEvent('broadcast', { detail: log });
+	      document.dispatchEvent(event);
+	    }
+	  }, {
 	    key: 'listen',
 
 	    /**
@@ -564,11 +655,35 @@
 	    value: function handleKeypress(event) {
 	      var mapping = _configConfigJson2['default'].mappings[event.which];
 
-	      if (this.moving === false && mapping && typeof this[mapping.command] === 'function') {
+	      if (event.target.nodeName !== 'INPUT' && this.moving === false && mapping && typeof this[mapping.command] === 'function') {
 	        event.preventDefault();
 	        var args = mapping.arguments || [];
 	        this[mapping.command].apply(this, mapping.arguments);
 	      }
+	    }
+	  }, {
+	    key: 'registerCommands',
+
+	    /**
+	     * Registers commands that pertain to this robot instance
+	     * @param {Event} event - the keydown event
+	     */
+	    value: function registerCommands() {
+	      var self = this;
+
+	      var commands = _configConfigJson2['default'].commands.map(function (i) {
+	        var cmd = {
+	          name: i.name,
+	          command: new RegExp(i.command, 'i'),
+	          action: function action() {
+	            self[i.action].apply(self, arguments);
+	          }
+	        };
+
+	        return cmd;
+	      });
+
+	      return commands;
 	    }
 	  }]);
 
@@ -590,38 +705,47 @@
 
 	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-	var _robot = __webpack_require__(4);
+	/**
+	 * The reporter class
+	 */
 
-	var _robot2 = _interopRequireDefault(_robot);
+	var Reporter = (function () {
+	  function Reporter(container) {
+	    _classCallCheck(this, Reporter);
 
-	var Parser = (function () {
-	  function Parser(robot) {
-	    _classCallCheck(this, Parser);
-
-	    if (!robot instanceof _robot2['default']) {
-	      throw new Error('Parser needs to connect to an instantiated robot');
+	    try {
+	      this.container = document.querySelector(container);
+	    } catch (e) {
+	      return console.error('No container was specified for the reporter');
 	    }
 	  }
 
-	  _createClass(Parser, [{
-	    key: 'load',
-	    value: function load(target) {}
+	  _createClass(Reporter, [{
+	    key: 'report',
+	    value: function report(event) {
+	      console.log(event.detail.coords);
+	      this.listItem(event.detail.message);
+	    }
 	  }, {
-	    key: 'parse',
-	    value: function parse() {}
+	    key: 'listItem',
+	    value: function listItem(val) {
+	      var li = document.createElement('li');
+	      li.innerHTML = val;
+	      this.container.insertBefore(li, this.container.firstChild);
+	    }
 	  }, {
 	    key: 'listen',
-	    value: function listen() {}
+	    value: function listen() {
+	      document.addEventListener('broadcast', this.report.bind(this));
+	    }
 	  }]);
 
-	  return Parser;
+	  return Reporter;
 	})();
 
-	exports['default'] = Parser;
+	exports['default'] = Reporter;
 	module.exports = exports['default'];
 
 /***/ },
@@ -640,6 +764,10 @@
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
+	var _configConfigJson = __webpack_require__(2);
+
+	var _configConfigJson2 = _interopRequireDefault(_configConfigJson);
+
 	var _mumbleJs = __webpack_require__(7);
 
 	var _mumbleJs2 = _interopRequireDefault(_mumbleJs);
@@ -648,63 +776,107 @@
 
 	var _robot2 = _interopRequireDefault(_robot);
 
-	var Speech = (function () {
-	  function Speech(robot) {
-	    _classCallCheck(this, Speech);
+	Object.freeze(_configConfigJson2['default']);
+
+	var TextParser = (function () {
+	  function TextParser(robot) {
+	    _classCallCheck(this, TextParser);
 
 	    if (!robot instanceof _robot2['default']) {
 	      throw new Error('Parser needs to connect to an instantiated robot');
 	    }
 
-	    this.mumble = new _mumbleJs2['default']({
-	      language: 'en-GB',
-	      debug: false,
-	      commands: [{
-	        name: 'place',
-	        command: /^place$/,
-	        action: function action() {
-	          robot.place();
-	        }
-	      }, {
-	        name: 'place_at',
-	        command: /^place X(.+) Y(.+) (North|East|South|West)$/,
-	        action: function action(x, y, f) {
-	          robot.place(parseInt(x), parseInt(y), f.toUpperCase());
-	        }
-	      }, {
-	        name: 'move',
-	        command: /^move$/,
-	        action: function action() {
-	          robot.move();
-	        }
-	      }, {
-	        name: 'left',
-	        command: /^left$/,
-	        action: function action() {
-	          robot.rotate('left');
-	        }
-	      }, {
-	        name: 'right',
-	        command: /^right$/,
-	        action: function action() {
-	          robot.rotate('right');
-	        }
-	      }]
-	    });
+	    this.queue = [];
+
+	    this.robot = robot;
+
+	    this.commands = this.robot.registerCommands();
+
+	    this.digesting = true;
+
+	    this.digest();
 	  }
 
-	  _createClass(Speech, [{
+	  _createClass(TextParser, [{
+	    key: 'digest',
+	    value: function digest() {
+	      var self = this;
+	      setTimeout(function () {
+	        requestAnimationFrame(self.digest.bind(self));
+	        if (self.queue.length) {
+	          self.readLn.call(self, self.queue[0]);
+	          self.queue.shift();
+	        }
+	      }, _configConfigJson2['default'].digest);
+	    }
+	  }, {
+	    key: 'cancelDigest',
+	    value: function cancelDigest() {
+	      this.digesting = false;
+	    }
+	  }, {
+	    key: 'readLn',
+	    value: function readLn(ln) {
+	      var args = [];
+	      var command = this.commands.filter(function (i) {
+	        var match = ln.trim().match(i.command);
+	        if (match) args = match.slice(1, match.length);
+	        return match;
+	      });
+	      try {
+	        command[0].action.apply(self.robot, args);
+	      } catch (e) {
+	        this.queue = [];
+	        throw new Error(e.message);
+	      }
+	    }
+	  }, {
+	    key: 'enqueue',
+	    value: function enqueue(event) {
+	      this.queue = this.queue.concat(event.target.result.trim().split('\n'));
+	    }
+	  }, {
+	    key: 'loadFile',
+	    value: function loadFile(event) {
+	      event.stopPropagation();
+	      event.preventDefault();
+
+	      document.documentElement.removeAttribute('data-file');
+
+	      var file = event.dataTransfer.files[0];
+	      var reader = new FileReader();
+
+	      reader.onload = this.enqueue.bind(this);
+	      reader.readAsText(file);
+	    }
+	  }, {
+	    key: 'addDropState',
+	    value: function addDropState(event) {
+	      event.stopPropagation();
+	      event.preventDefault();
+	      document.documentElement.setAttribute('data-file', '');
+	    }
+	  }, {
+	    key: 'removeDropState',
+	    value: function removeDropState(event) {
+	      event.stopPropagation();
+	      event.preventDefault();
+	      document.documentElement.removeAttribute('data-file');
+	    }
+	  }, {
 	    key: 'listen',
 	    value: function listen() {
-
-	      this.mumble.start();
+	      document.documentElement.addEventListener('dragover', this.addDropState.bind(this));
+	      document.documentElement.addEventListener('dragend', this.removeDropState.bind(this));
+	      document.documentElement.addEventListener('dragleave', this.removeDropState.bind(this));
+	      document.documentElement.addEventListener('drop', this.loadFile.bind(this));
 	    }
 	  }]);
 
-	  return Speech;
+	  return TextParser;
 	})();
 
-	exports['default'] = Speech;
+	exports['default'] = TextParser;
 	module.exports = exports['default'];
 
 /***/ },
@@ -1134,6 +1306,67 @@
 			return Mumble;
 		}
 	));
+
+/***/ },
+/* 8 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, '__esModule', {
+	  value: true
+	});
+
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+	var _configConfigJson = __webpack_require__(2);
+
+	var _configConfigJson2 = _interopRequireDefault(_configConfigJson);
+
+	var _mumbleJs = __webpack_require__(7);
+
+	var _mumbleJs2 = _interopRequireDefault(_mumbleJs);
+
+	var _robot = __webpack_require__(4);
+
+	var _robot2 = _interopRequireDefault(_robot);
+
+	Object.freeze(_configConfigJson2['default']);
+
+	var SpeechParser = (function () {
+	  function SpeechParser(robot) {
+	    _classCallCheck(this, SpeechParser);
+
+	    if (!robot instanceof _robot2['default']) {
+	      throw new Error('Parser needs to connect to an instantiated robot');
+	    }
+
+	    this.robot = robot;
+
+	    this.commands = this.robot.registerCommands();
+
+	    this.mumble = new _mumbleJs2['default']({
+	      language: _configConfigJson2['default'].language,
+	      commands: this.commands
+	    });
+	  }
+
+	  _createClass(SpeechParser, [{
+	    key: 'listen',
+	    value: function listen() {
+	      this.mumble.start();
+	    }
+	  }]);
+
+	  return SpeechParser;
+	})();
+
+	exports['default'] = SpeechParser;
+	module.exports = exports['default'];
 
 /***/ }
 /******/ ]);
