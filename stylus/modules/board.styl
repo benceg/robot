@@ -1,12 +1,4 @@
-[data-dragging]
-  *
-    cursor grabbing !important
-
-body
-  text-align center
-
 #board
-  margin-top 100px
   display inline-block
   position relative
   transform-style preserve-3d
@@ -21,11 +13,17 @@ body
     left 0
     transform translateZ(-80px)
     background rgba(black, 0.075)
+    -webkit-filter blur(3px)
   
   canvas
     display block
     margin 0 auto
     transform-origin 50% 50%
-    background yellow
+    background white url(http://www.johnsusek.com/projects/textures/lawdogs/wp4.jpg)
+    background-size 400px auto
     cursor grab
     transform rotateX(0)
+
+[data-dragging]
+  *
+    cursor grabbing !important

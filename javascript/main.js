@@ -1,7 +1,8 @@
 import Grid from "./classes/grid";
 import Robot from "./classes/robot";
-import Parser from "./classes/parser";
-import Speech from "./classes/speech";
+import Reporter from "./classes/reporter";
+import TextParser from "./classes/text-parser";
+import SpeechParser from "./classes/speech-parser";
 
 let grid = new Grid({
   container : '#board',
@@ -13,9 +14,10 @@ let robot = new Robot({
   name : 'Roomba'
 });
 
-let parser = new Parser(robot);
+let reporter = new Reporter('#report');
 
-let speech = new Speech(robot);
+let textParser = new TextParser(robot);
+let speechParser = new SpeechParser(robot);
 
 document.addEventListener('DOMContentLoaded', ()=> {
   
@@ -26,8 +28,9 @@ document.addEventListener('DOMContentLoaded', ()=> {
   robot.connectTo(grid);
   robot.listen();
   
-  parser.listen();
+  textParser.listen();
+  // speechParser.listen();
   
-  speech.listen();
+  reporter.listen();
   
 });

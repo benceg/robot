@@ -11,6 +11,8 @@ module.exports = function(config) {
     
     files : ['test/**/*.js'],
     
+    exclude : ['node_modules'],
+    
     preprocessors : {
       'test/**/*.js' : ['webpack']
     },
@@ -33,14 +35,24 @@ module.exports = function(config) {
       module : {
         preLoaders : [
           {
-            test : /(\.js)$/,
-            exclude : /(test|node_modules)\//,
-            loader : 'isparta-instrumenter-loader'
+            test: /\.js$/,
+            include: path.resolve('test/'),
+            loader: 'babel'
+          },
+          {
+            test : /\.js$/,
+            include : path.resolve('javascript/'),
+            loader : 'isparta'
+          },
+          {
+            test: /\.txt$/,
+            exclude: /(node_modules)\//,
+            loader: 'raw'
           },
           {
             test: /\.json$/,
             exclude: /(node_modules)\//,
-            loader: 'json-loader'
+            loader: 'json'
           }
         ]
       }

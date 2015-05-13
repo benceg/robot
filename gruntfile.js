@@ -186,7 +186,7 @@ module.exports = function(grunt) {
         tasks : ["stylus"]
       },
       scripts : {
-        files : ["javascript/**"],
+        files : ["javascript/**", "config/**"],
         tasks : ["webpack:build"]
       }
     }

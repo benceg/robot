@@ -41,7 +41,7 @@ describe('Robot', ()=> {
       robot.position.x = 2;
       robot.position.y = 3;
       robot.animate();
-      expect(robot.robot.style.transform).toBe('translate3d(20px, -30px, 0) rotate(0deg)');
+      expect(robot.robot.style.transform).toBe('translate3d(20px, -30px, 10px) rotate(0deg)');
     });
     
   });

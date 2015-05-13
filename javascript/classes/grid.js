@@ -17,8 +17,20 @@ export default class Grid
     this.offsetY = 0;
   }
   
+  createCanvas()
+  {
+    this.canvas = document.createElement('canvas');
+    this.el.appendChild(this.canvas);
+    this.canvas.draggable = true;
+    this.canvas.width = this.columns * this.size;
+    this.canvas.height = this.rows * this.size;
+    this.ctx = this.canvas.getContext('2d');
+  }
+  
   layout()
   {
+    this.ctx.strokeStyle = this.lines.color;
+    this.ctx.lineWidth = this.lines.width;
     if (!this.ctx || !this.ctx instanceof CanvasRenderingContext2D)
     {
       throw new Error('Grid.ctx is not a canvas element');
@@ -32,20 +44,13 @@ export default class Grid
     }
   }
   
-  createCanvas()
-  {
-    this.canvas = document.createElement('canvas');
-    this.el.appendChild(this.canvas);
-    this.canvas.draggable = true;
-    this.canvas.width = this.columns * this.size;
-    this.canvas.height = this.rows * this.size;
-    this.ctx = this.canvas.getContext('2d');
-  }
-  
   draw(x, y)
   {
-    this.ctx.moveTo(x * this.size, y * this.size);
-    this.ctx.strokeRect(x * this.size, y * this.size, x * this.size + this.size, y * this.size + this.size);
+    let fromX = x * this.size + this.lines.width / 2;
+    let fromY = y * this.size + this.lines.width / 2;
+    let toX = this.size - this.lines.width;
+    let toY = this.size - this.lines.width;
+    this.ctx.strokeRect(fromX, fromY, toX, toY);
   }
   
   checkTouch(event) {

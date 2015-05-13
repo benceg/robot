@@ -1,10 +1,17 @@
 {
+  "language" : "en-GB",
+  
+  "digest" : 1000,
   
   "grid" : {
     "container" : "body",
     "rows" : 5,
     "columns" : 5,
-    "size" : 100
+    "size" : 100,
+    "lines" : {
+      "color" : "rgba(0,0,0,0.3)",
+      "width" : 3
+    }
   },
   
   "robot" : {
@@ -15,6 +22,7 @@
       "y" : 0,
       "f" : "NORTH"
     },
+    "hover" : 10,
     "sounds" : {
       "move" : "",
       "rotate" : ""
@@ -60,7 +68,43 @@
     },
     "38" : {
       "command" : "move"
+    },
+    "13" : {
+      "command" : "report"
     }
-  }
+  },
+  
+  "commands" : [
+    {
+      "name" : "place",
+      "command" : "^place$",
+      "action" : "place"
+    },
+    {
+      "name" : "place_at",
+      "command" : "^place X?([0-9]+)\\,?\\s?Y?([0-9]+)\\,?\\s?(North|East|South|West)$",
+      "action" : "place"
+    },
+    {
+      "name" : "move",
+      "command" : "^move$",
+      "action" : "move"
+    },
+    {
+      "name" : "left",
+      "command" : "^left$",
+      "action" : "left"
+    },
+    {
+      "name" : "right",
+      "command" : "^right$",
+      "action" : "right"
+    },
+    {
+      "name" : "report",
+      "command" : "^report$",
+      "action" : "report"
+    }
+  ]
   
 }

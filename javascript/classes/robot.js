@@ -15,6 +15,7 @@ export default class Robot {
    */
   constructor(args) {
     ObjectAssign(this, config.robot, args);
+    
     /** @type {boolean} */
     this.placed = false;
     /** @type {boolean} */
@@ -31,6 +32,8 @@ export default class Robot {
   render()
   {
     this.robot = document.createElement('div');
+    this.robot.style.width = this.robot.style.height = `${this.grid.size * 0.6}px`;
+    this.robot.style.margin = `${this.grid.size * 0.2}px`;
     this.robot.id = 'robot';
     this.grid.el.appendChild(this.robot);
   }
@@ -40,7 +43,7 @@ export default class Robot {
    */
   animate()
   {
-    this.robot.style.transform = `translate3d(${this.position.x * this.grid.size}px, -${this.position.y * this.grid.size}px, 10px) rotate(${this.position.a}deg)`;
+    this.robot.style.transform = `translate3d(${this.position.x * this.grid.size}px, -${this.position.y * this.grid.size}px, ${config.robot.hover}px) rotate(${this.position.a}deg)`;
     this.robot.setAttribute('data-heading', this.position.f.toLowerCase());
   }
   
@@ -90,8 +93,11 @@ export default class Robot {
    * @param {number} y - the Y coordinate of the location
    * @param {string} f - the compass heading of the location
    */
-  place(x = 0, y = 0, f = 'NORTH')
+  place(X = 0, Y = 0, F = 'NORTH')
   {
+    let x = parseInt(X);
+    let y = parseInt(Y);
+    let f = F.toUpperCase();
     // X coordinate
     this.position.x = (this.validateX(x)) ? x : config.robot.position.x;
     // Y coordinate
@@ -110,15 +116,6 @@ export default class Robot {
     }
     
     this.animate();
-  }
-  
-  report() {
-    let log = {
-      X : this.position.x,
-      Y : this.position.y,
-      F : this.position.f
-    }
-    console.log(log);
   }
   
   /**
@@ -185,6 +182,46 @@ export default class Robot {
   }
   
   /**
+   * Proxy function to rotate from speech and text parser
+   */
+  left() {
+    this.rotate('left');
+  }
+  
+  /**
+   * Proxy function to rotate from speech and text parser
+   */
+  right() {
+    this.rotate('right');
+  }
+  
+  /**
+   * Announces the position and bearing of the robot
+   */
+  report()
+  {
+    let log = { coords : false, message : false };
+    
+    if (this.placed === true)
+    {
+      log.coords = {
+        X : this.position.x,
+        Y : this.position.y,
+        F : this.position.f
+      };
+      log.message = `${this.name} is at X${this.position.x}, Y${this.position.y} and facing ${this.position.f.toLowerCase()}`
+    }
+    else
+    {
+      log.coords = false;
+      log = `${this.name} is not yet on the board`;
+    }
+    
+    let event = new CustomEvent('broadcast', { detail : log });
+    document.dispatchEvent(event);
+  }
+  
+  /**
    * Listens for arrow and space key events
    */
   listen()
@@ -200,12 +237,36 @@ export default class Robot {
   {
     let mapping = config.mappings[event.which];
     
-    if (this.moving === false && mapping && typeof this[mapping.command] === 'function')
+    if (event.target.nodeName !== 'INPUT' && this.moving === false && mapping && typeof this[mapping.command] === 'function')
     {
       event.preventDefault();
       let args = mapping.arguments || [];
       this[mapping.command].apply(this, mapping.arguments);
     }
+  }
+  
+  /**
+   * Registers commands that pertain to this robot instance
+   * @param {Event} event - the keydown event
+   */
+  registerCommands()
+  {
+    let self = this;
+    
+    let commands = config.commands.map(function(i)
+    {
+      let cmd = {
+        name : i.name,
+        command : new RegExp(i.command, 'i'),
+        action : function() {
+          self[i.action].apply(self, arguments);
+        }
+      }
+      
+      return cmd;
+    });
+    
+    return commands;
   }
   
 }
