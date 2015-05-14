@@ -149,8 +149,8 @@ body {
   -webkit-transform-origin: 50% 50%;
       -ms-transform-origin: 50% 50%;
           transform-origin: 50% 50%;
-  background: #fff url("http://www.johnsusek.com/projects/textures/lawdogs/wp4.jpg");
-  background-size: 400px auto;
+  background: #fff url("images/carpet.jpg") repeat 0 0;
+  background-size: 100px;
   cursor: -webkit-grab;
   cursor: grab;
   -webkit-transform: rotateX(0);
@@ -173,6 +173,8 @@ body {
           perspective: 0;
   display: block;
   position: absolute;
+  background: url("images/roomba.png") no-repeat 50% 50%;
+  background-size: cover;
 }
 #robot:before,
 #robot:after {
@@ -183,17 +185,17 @@ body {
 }
 #robot:before {
   content: "";
-  background: url("http://th03.deviantart.net/fs71/PRE/i/2012/340/0/6/png_cat_by_moonglowlilly-d5n7zqm.png") no-repeat 50% 50%;
+  background: url("images/kitty.png") no-repeat 50% 100%;
   background-size: cover;
-  -webkit-transform: translateZ(20px) rotateY(90deg) rotateZ(-90deg);
-          transform: translateZ(20px) rotateY(90deg) rotateZ(-90deg);
+  -webkit-transform: translateZ(26px) rotateY(90deg) rotateZ(-90deg);
+          transform: translateZ(26px) rotateY(90deg) rotateZ(-90deg);
 }
 #robot:after {
   content: "";
-  background: rgba(0,0,0,0.3);
+  background: #999;
   border-radius: 50%;
-  -webkit-transform: translateZ(-9px);
-          transform: translateZ(-9px);
+  -webkit-transform: translateZ(-6px);
+          transform: translateZ(-6px);
 }
 #dropzone {
   position: fixed;

@@ -250,6 +250,16 @@
 			"lines": {
 				"color": "rgba(0,0,0,0.3)",
 				"width": 3
+			},
+			"angle": {
+				"x": [
+					60,
+					60
+				],
+				"y": [
+					65,
+					0
+				]
 			}
 		},
 		"robot": {
@@ -260,7 +270,7 @@
 				"y": 0,
 				"f": "NORTH"
 			},
-			"hover": 10,
+			"hover": 7,
 			"sounds": {
 				"move": "",
 				"rotate": ""
@@ -1024,7 +1034,7 @@
 	        log.message = '' + this.name + ' is at X' + this.position.x + ', Y' + this.position.y + ' and facing ' + this.position.f.toLowerCase();
 	      } else {
 	        log.coords = false;
-	        log = '' + this.name + ' is not yet on the board';
+	        log.message = '' + this.name + ' is not yet on the board';
 	      }
 
 	      var event = new CustomEvent('broadcast', { detail: log });
@@ -1208,8 +1218,8 @@
 	    value: function rotate(event) {
 	      if (startX && startY) {
 	        event.preventDefault();
-	        this.offsetX = this.clamp(this.checkTouch(event).pageX - startX, 60);
-	        this.offsetY = this.clamp(this.checkTouch(event).pageY - startY, 60, 0);
+	        this.offsetX = this.clamp(this.checkTouch(event).pageX - startX, this.angle.x[0], this.angle.x[1]);
+	        this.offsetY = this.clamp(this.checkTouch(event).pageY - startY, this.angle.y[0], this.angle.y[1]);
 	        this.canvas.parentNode.style.transform = 'perspective(1000px) rotateX(' + this.offsetY + 'deg) rotateZ(' + this.offsetX + 'deg)';
 	        this.canvas.parentNode.style.webkitTransform = 'perspective(1000px) rotateX(' + this.offsetY + 'deg) rotateZ(' + this.offsetX + 'deg)';
 	      }
@@ -1311,7 +1321,11 @@
 	  _createClass(Reporter, [{
 	    key: 'report',
 	    value: function report(event) {
-	      console.log(event.detail.coords);
+	      if (event.detail.coords) {
+	        console.log(event.detail.coords);
+	      } else {
+	        console.log(event.detail.message);
+	      }
 	      this.listItem(event.detail.message);
 	    }
 	  }, {
