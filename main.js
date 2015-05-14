@@ -644,12 +644,13 @@
 	     */
 	    value: function listen() {
 	      document.addEventListener('keydown', this.handleKeypress.bind(this));
+	      document.addEventListener('click', this.handleClick.bind(this));
 	    }
 	  }, {
 	    key: 'handleKeypress',
 
 	    /**
-	     * Handles keypresses from arrow and space key listener
+	     * Handles keypresses from arrow, enter and space key listener
 	     * @param {Event} event - the keydown event
 	     */
 	    value: function handleKeypress(event) {
@@ -659,6 +660,24 @@
 	        event.preventDefault();
 	        var args = mapping.arguments || [];
 	        this[mapping.command].apply(this, mapping.arguments);
+	      }
+	    }
+	  }, {
+	    key: 'handleClick',
+
+	    /**
+	     * Handles clicks
+	     * @param {Event} event - the click or touch event
+	     */
+	    value: function handleClick(event) {
+	      if (event.target.getAttribute('data-action') && this.moving === false) {
+	        event.preventDefault();
+	        event.stopPropagation();
+
+	        var command = event.target.getAttribute('data-action');
+	        if (typeof this[command] === 'function') {
+	          this[command]();
+	        }
 	      }
 	    }
 	  }, {

@@ -136,7 +136,6 @@ body {
   -webkit-transform: translateZ(-80px);
           transform: translateZ(-80px);
   background: rgba(0,0,0,0.075);
-  -webkit-filter: blur(3px);
 }
 #board canvas {
   display: block;
@@ -224,4 +223,23 @@ body {
 }
 .reporter > ul > li {
   white-space: nowrap;
+}
+.buttons {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  font-size: 0;
+  line-height: 30px;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
+  text-align: center;
+}
+.buttons > span {
+  font-size: 20px;
+  display: inline-block;
+  width: 20%;
+  cursor: pointer;
 }
