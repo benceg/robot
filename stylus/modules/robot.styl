@@ -8,6 +8,8 @@
   perspective 0
   display block
   position absolute
+  background url(images/roomba.png) no-repeat 50% 50%
+  background-size cover
 
   &:before
   &:after
@@ -18,12 +20,12 @@
   
   &:before
     content ""
-    background url(http://th03.deviantart.net/fs71/PRE/i/2012/340/0/6/png_cat_by_moonglowlilly-d5n7zqm.png) no-repeat 50% 50%
+    background url(images/kitty.png) no-repeat 50% 100%
     background-size cover
-    transform translateZ(20px) rotateY(90deg) rotateZ(-90deg)
+    transform translateZ(26px) rotateY(90deg) rotateZ(-90deg)
   
   &:after
     content ""
-    background rgba(0,0,0,0.3)
+    background darken(white, 40%)
     border-radius 50%
-    transform translateZ(-9px)
+    transform translateZ(-6px)

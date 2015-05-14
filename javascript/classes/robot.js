@@ -215,7 +215,7 @@ export default class Robot {
     else
     {
       log.coords = false;
-      log = `${this.name} is not yet on the board`;
+      log.message = `${this.name} is not yet on the board`;
     }
     
     let event = new CustomEvent('broadcast', { detail : log });

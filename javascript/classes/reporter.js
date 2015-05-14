@@ -17,7 +17,14 @@ export default class Reporter {
   
   report(event)
   {
-    console.log(event.detail.coords);
+    if (event.detail.coords)
+    {
+      console.log(event.detail.coords);
+    }
+    else
+    {
+      console.log(event.detail.message);
+    }
     this.listItem(event.detail.message);
   }
   

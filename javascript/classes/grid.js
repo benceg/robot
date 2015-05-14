@@ -84,8 +84,8 @@ export default class Grid
     if(startX && startY)
     {
       event.preventDefault();
-      this.offsetX = this.clamp((this.checkTouch(event).pageX - startX), 60);
-      this.offsetY = this.clamp((this.checkTouch(event).pageY - startY), 60, 0);
+      this.offsetX = this.clamp((this.checkTouch(event).pageX - startX), this.angle.x[0], this.angle.x[1]);
+      this.offsetY = this.clamp((this.checkTouch(event).pageY - startY), this.angle.y[0], this.angle.y[1]);
       this.canvas.parentNode.style.transform = `perspective(1000px) rotateX(${this.offsetY}deg) rotateZ(${this.offsetX}deg)`;
       this.canvas.parentNode.style.webkitTransform = `perspective(1000px) rotateX(${this.offsetY}deg) rotateZ(${this.offsetX}deg)`;
     }
