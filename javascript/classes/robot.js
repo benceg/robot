@@ -44,6 +44,7 @@ export default class Robot {
   animate()
   {
     this.robot.style.transform = `translate3d(${this.position.x * this.grid.size}px, -${this.position.y * this.grid.size}px, ${config.robot.hover}px) rotate(${this.position.a}deg)`;
+    this.robot.style.webkitTransform = `translate3d(${this.position.x * this.grid.size}px, -${this.position.y * this.grid.size}px, ${config.robot.hover}px) rotate(${this.position.a}deg)`;
     this.robot.setAttribute('data-heading', this.position.f.toLowerCase());
   }
   

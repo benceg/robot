@@ -1,8 +1,9 @@
-import Grid from "./classes/grid";
-import Robot from "./classes/robot";
-import Reporter from "./classes/reporter";
-import TextParser from "./classes/text-parser";
-import SpeechParser from "./classes/speech-parser";
+import Grid from './classes/grid';
+import Robot from './classes/robot';
+import Reporter from './classes/reporter';
+import TextParser from './classes/text-parser';
+import SpeechParser from './classes/speech-parser';
+import fastClick from 'fastclick';
 
 let grid = new Grid({
   container : '#board',
@@ -20,6 +21,8 @@ let textParser = new TextParser(robot);
 let speechParser = new SpeechParser(robot);
 
 document.addEventListener('DOMContentLoaded', ()=> {
+  
+  fastClick.attach(document.body);
   
   grid.createCanvas();
   grid.layout();
