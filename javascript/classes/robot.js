@@ -227,10 +227,11 @@ export default class Robot {
   listen()
   {
     document.addEventListener('keydown', this.handleKeypress.bind(this));
+    document.addEventListener('click', this.handleClick.bind(this));
   }
   
   /**
-   * Handles keypresses from arrow and space key listener
+   * Handles keypresses from arrow, enter and space key listener
    * @param {Event} event - the keydown event
    */
   handleKeypress(event)
@@ -242,6 +243,25 @@ export default class Robot {
       event.preventDefault();
       let args = mapping.arguments || [];
       this[mapping.command].apply(this, mapping.arguments);
+    }
+  }
+  
+  /**
+   * Handles clicks
+   * @param {Event} event - the click or touch event
+   */
+  handleClick(event)
+  {
+    if (event.target.getAttribute('data-action') && this.moving === false)
+    {
+      event.preventDefault();
+      event.stopPropagation();
+      
+      let command = event.target.getAttribute('data-action');
+      if (typeof this[command] === 'function')
+      {
+        this[command]();
+      }
     }
   }
   

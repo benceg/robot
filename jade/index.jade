@@ -12,5 +12,11 @@ html(lang="en")
     p#dropzone Drop your instructions here.
     .wrapper.vertical
       #board
+    .buttons
+      span(data-action="place") Place
+      span(data-action="move") Move
+      span(data-action="left") Left
+      span(data-action="right") Right
+      span(data-action="report") Report
     script(src="main.js")
     script(src="http://localhost:3857/livereload.js")
