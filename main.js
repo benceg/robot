@@ -44,11 +44,11 @@
 /* 0 */
 /***/ function(module, exports, __webpack_require__) {
 
-	"use strict";
+	'use strict';
 
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-	var _classesGrid = __webpack_require__(1);
+	var _classesGrid = __webpack_require__(5);
 
 	var _classesGrid2 = _interopRequireDefault(_classesGrid);
 
@@ -56,11 +56,11 @@
 
 	var _classesRobot2 = _interopRequireDefault(_classesRobot);
 
-	var _classesReporter = __webpack_require__(5);
+	var _classesReporter = __webpack_require__(7);
 
 	var _classesReporter2 = _interopRequireDefault(_classesReporter);
 
-	var _classesTextParser = __webpack_require__(6);
+	var _classesTextParser = __webpack_require__(1);
 
 	var _classesTextParser2 = _interopRequireDefault(_classesTextParser);
 
@@ -68,22 +68,28 @@
 
 	var _classesSpeechParser2 = _interopRequireDefault(_classesSpeechParser);
 
-	var grid = new _classesGrid2["default"]({
-	  container: "#board",
+	var _fastclick = __webpack_require__(9);
+
+	var _fastclick2 = _interopRequireDefault(_fastclick);
+
+	var grid = new _classesGrid2['default']({
+	  container: '#board',
 	  columns: 5,
 	  rows: 5
 	});
 
-	var robot = new _classesRobot2["default"]({
-	  name: "Roomba"
+	var robot = new _classesRobot2['default']({
+	  name: 'Roomba'
 	});
 
-	var reporter = new _classesReporter2["default"]("#report");
+	var reporter = new _classesReporter2['default']('#report');
 
-	var textParser = new _classesTextParser2["default"](robot);
-	var speechParser = new _classesSpeechParser2["default"](robot);
+	var textParser = new _classesTextParser2['default'](robot);
+	var speechParser = new _classesSpeechParser2['default'](robot);
 
-	document.addEventListener("DOMContentLoaded", function () {
+	document.addEventListener('DOMContentLoaded', function () {
+
+	  _fastclick2['default'].attach(document.body);
 
 	  grid.createCanvas();
 	  grid.layout();
@@ -118,124 +124,115 @@
 
 	var _configConfigJson2 = _interopRequireDefault(_configConfigJson);
 
-	var _objectAssign = __webpack_require__(3);
+	var _mumbleJs = __webpack_require__(3);
 
-	var _objectAssign2 = _interopRequireDefault(_objectAssign);
+	var _mumbleJs2 = _interopRequireDefault(_mumbleJs);
+
+	var _robot = __webpack_require__(4);
+
+	var _robot2 = _interopRequireDefault(_robot);
 
 	Object.freeze(_configConfigJson2['default']);
 
-	var startX = null;
-	var startY = null;
+	var TextParser = (function () {
+	  function TextParser(robot) {
+	    _classCallCheck(this, TextParser);
 
-	var Grid = (function () {
-	  function Grid(args) {
-	    _classCallCheck(this, Grid);
+	    if (!robot instanceof _robot2['default']) {
+	      throw new Error('Parser needs to connect to an instantiated robot');
+	    }
 
-	    _objectAssign2['default'](this, _configConfigJson2['default'].grid, args);
-	    this.el = document.querySelector(this.container);
-	    this.offsetX = 0;
-	    this.offsetY = 0;
+	    this.queue = [];
+
+	    this.robot = robot;
+
+	    this.commands = this.robot.registerCommands();
+
+	    this.digesting = true;
+
+	    this.digest();
 	  }
 
-	  _createClass(Grid, [{
-	    key: 'createCanvas',
-	    value: function createCanvas() {
-	      this.canvas = document.createElement('canvas');
-	      this.el.appendChild(this.canvas);
-	      this.canvas.draggable = true;
-	      this.canvas.width = this.columns * this.size;
-	      this.canvas.height = this.rows * this.size;
-	      this.ctx = this.canvas.getContext('2d');
-	    }
-	  }, {
-	    key: 'layout',
-	    value: function layout() {
-	      this.ctx.strokeStyle = this.lines.color;
-	      this.ctx.lineWidth = this.lines.width;
-	      if (!this.ctx || !this.ctx instanceof CanvasRenderingContext2D) {
-	        throw new Error('Grid.ctx is not a canvas element');
-	      }
-	      for (var y = 0; y < this.rows; y++) {
-	        for (var x = 0; x < this.columns; x++) {
-	          this.draw(x, y);
+	  _createClass(TextParser, [{
+	    key: 'digest',
+	    value: function digest() {
+	      var self = this;
+	      setTimeout(function () {
+	        requestAnimationFrame(self.digest.bind(self));
+	        if (self.queue.length) {
+	          self.readLn.call(self, self.queue[0]);
+	          self.queue.shift();
 	        }
+	      }, _configConfigJson2['default'].digest);
+	    }
+	  }, {
+	    key: 'cancelDigest',
+	    value: function cancelDigest() {
+	      this.digesting = false;
+	    }
+	  }, {
+	    key: 'readLn',
+	    value: function readLn(ln) {
+	      var args = [];
+	      var command = this.commands.filter(function (i) {
+	        var match = ln.trim().match(i.command);
+	        if (match) args = match.slice(1, match.length);
+	        return match;
+	      });
+	      try {
+	        command[0].action.apply(self.robot, args);
+	      } catch (e) {
+	        this.queue = [];
+	        throw new Error(e.message);
 	      }
 	    }
 	  }, {
-	    key: 'draw',
-	    value: function draw(x, y) {
-	      var fromX = x * this.size + this.lines.width / 2;
-	      var fromY = y * this.size + this.lines.width / 2;
-	      var toX = this.size - this.lines.width;
-	      var toY = this.size - this.lines.width;
-	      this.ctx.strokeRect(fromX, fromY, toX, toY);
+	    key: 'enqueue',
+	    value: function enqueue(event) {
+	      this.queue = this.queue.concat(event.target.result.trim().split('\n'));
 	    }
 	  }, {
-	    key: 'checkTouch',
-	    value: function checkTouch(event) {
-	      return event.changedTouches ? event.changedTouches[0] : event;
-	    }
-	  }, {
-	    key: 'startRotate',
-	    value: function startRotate(event) {
-	      if (event.target === this.canvas) {
-	        event.preventDefault();
-	        startX = this.checkTouch(event).pageX - this.offsetX;
-	        startY = this.checkTouch(event).pageY - this.offsetY;
-	        document.documentElement.setAttribute('data-dragging', '');
-	      }
-	    }
-	  }, {
-	    key: 'stopRotate',
-	    value: function stopRotate(event) {
-	      if (startX || startY) {
-	        event.preventDefault();
-	        startX = null;
-	        startY = null;
-	        document.documentElement.removeAttribute('data-dragging');
-	      }
-	    }
-	  }, {
-	    key: 'rotate',
-	    value: function rotate(event) {
-	      if (startX && startY) {
-	        event.preventDefault();
-	        this.offsetX = this.clamp(this.checkTouch(event).pageX - startX, 60);
-	        this.offsetY = this.clamp(this.checkTouch(event).pageY - startY, 60, 0);
-	        this.canvas.parentNode.style.transform = 'perspective(1000px) rotateX(' + this.offsetY + 'deg) rotateZ(' + this.offsetX + 'deg)';
-	      }
-	    }
-	  }, {
-	    key: 'clamp',
-	    value: function clamp(value) {
-	      var max = arguments[1] === undefined ? 60 : arguments[1];
-	      var min = arguments[2] === undefined ? 60 : arguments[2];
+	    key: 'loadFile',
+	    value: function loadFile(event) {
+	      event.stopPropagation();
+	      event.preventDefault();
 
-	      if (value > max) {
-	        return max;
-	      } else if (value < -min) {
-	        return -min;
-	      } else {
-	        return value;
-	      }
+	      document.documentElement.removeAttribute('data-file');
+
+	      var file = event.dataTransfer.files[0];
+	      var reader = new FileReader();
+
+	      reader.onload = this.enqueue.bind(this);
+	      reader.readAsText(file);
+	    }
+	  }, {
+	    key: 'addDropState',
+	    value: function addDropState(event) {
+	      event.stopPropagation();
+	      event.preventDefault();
+	      document.documentElement.setAttribute('data-file', '');
+	    }
+	  }, {
+	    key: 'removeDropState',
+	    value: function removeDropState(event) {
+	      event.stopPropagation();
+	      event.preventDefault();
+	      document.documentElement.removeAttribute('data-file');
 	    }
 	  }, {
 	    key: 'listen',
 	    value: function listen() {
-	      document.addEventListener('mousedown', this.startRotate.bind(this));
-	      document.addEventListener('mousemove', this.rotate.bind(this));
-	      document.addEventListener('mouseup', this.stopRotate.bind(this));
-
-	      document.addEventListener('touchstart', this.startRotate.bind(this));
-	      document.addEventListener('touchmove', this.rotate.bind(this));
-	      document.addEventListener('touchend', this.stopRotate.bind(this));
+	      document.documentElement.addEventListener('dragover', this.addDropState.bind(this));
+	      document.documentElement.addEventListener('dragend', this.removeDropState.bind(this));
+	      document.documentElement.addEventListener('dragleave', this.removeDropState.bind(this));
+	      document.documentElement.addEventListener('drop', this.loadFile.bind(this));
 	    }
 	  }]);
 
-	  return Grid;
+	  return TextParser;
 	})();
 
-	exports['default'] = Grid;
+	exports['default'] = TextParser;
 	module.exports = exports['default'];
 
 /***/ },
@@ -351,555 +348,6 @@
 
 /***/ },
 /* 3 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	function ToObject(val) {
-		if (val == null) {
-			throw new TypeError('Object.assign cannot be called with null or undefined');
-		}
-
-		return Object(val);
-	}
-
-	module.exports = Object.assign || function (target, source) {
-		var from;
-		var keys;
-		var to = ToObject(target);
-
-		for (var s = 1; s < arguments.length; s++) {
-			from = arguments[s];
-			keys = Object.keys(Object(from));
-
-			for (var i = 0; i < keys.length; i++) {
-				to[keys[i]] = from[keys[i]];
-			}
-		}
-
-		return to;
-	};
-
-
-/***/ },
-/* 4 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
-
-	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-
-	var _configConfigJson = __webpack_require__(2);
-
-	var _configConfigJson2 = _interopRequireDefault(_configConfigJson);
-
-	var _grid = __webpack_require__(1);
-
-	var _grid2 = _interopRequireDefault(_grid);
-
-	var _objectAssign = __webpack_require__(3);
-
-	var _objectAssign2 = _interopRequireDefault(_objectAssign);
-
-	Object.freeze(_configConfigJson2['default']);
-
-	/**
-	 * The robot class
-	 */
-
-	var Robot = (function () {
-
-	  /**
-	   * Overrides default robot settings and bootstraps the module
-	   * @param {Object} args - overrides for the standard robot config
-	   */
-
-	  function Robot(args) {
-	    _classCallCheck(this, Robot);
-
-	    _objectAssign2['default'](this, _configConfigJson2['default'].robot, args);
-
-	    /** @type {boolean} */
-	    this.placed = false;
-	    /** @type {boolean} */
-	    this.moving = false;
-	    /** @type {node} */
-	    this.robot = null;
-	    /** @type {array} */
-	    this.queue = [];
-	  }
-
-	  _createClass(Robot, [{
-	    key: 'render',
-
-	    /**
-	     * Renders the robot in proximity to the grid element
-	     */
-	    value: function render() {
-	      this.robot = document.createElement('div');
-	      this.robot.style.width = this.robot.style.height = '' + this.grid.size * 0.6 + 'px';
-	      this.robot.style.margin = '' + this.grid.size * 0.2 + 'px';
-	      this.robot.id = 'robot';
-	      this.grid.el.appendChild(this.robot);
-	    }
-	  }, {
-	    key: 'animate',
-
-	    /**
-	     * Manoeuvres the robot according to its current state
-	     */
-	    value: function animate() {
-	      this.robot.style.transform = 'translate3d(' + this.position.x * this.grid.size + 'px, -' + this.position.y * this.grid.size + 'px, ' + _configConfigJson2['default'].robot.hover + 'px) rotate(' + this.position.a + 'deg)';
-	      this.robot.setAttribute('data-heading', this.position.f.toLowerCase());
-	    }
-	  }, {
-	    key: 'connectTo',
-
-	    /**
-	     * Attaches the robot to the grid of choice
-	     * @param {Grid} grid - the instantiated grid object
-	     */
-	    value: function connectTo(grid) {
-	      if (grid instanceof _grid2['default'] === false) {
-	        throw new Error('first argument must be a grid instance');
-	      }
-	      this.grid = grid;
-	    }
-	  }, {
-	    key: 'validateX',
-
-	    /**
-	     * Validates X as a coordinate on the board
-	     * @param {number} x - the desired new X coordinate
-	     */
-	    value: function validateX(x) {
-	      return typeof x === 'number' && x < this.grid.columns && x >= 0 ? true : false;
-	    }
-	  }, {
-	    key: 'validateY',
-
-	    /**
-	     * Validates Y as a coordinate on the board
-	     * @param {number} y - the desired new Y coordinate
-	     */
-	    value: function validateY(y) {
-	      return typeof y === 'number' && y < this.grid.rows && y >= 0 ? true : false;
-	    }
-	  }, {
-	    key: 'validateF',
-
-	    /**
-	     * Validates F as a bearing reference contained in the config file
-	     * @param {string} f - the uppercase compass direction
-	     */
-	    value: function validateF(f) {
-	      return typeof f === 'string' && typeof _configConfigJson2['default'].headings[f] === 'object' ? true : false;
-	    }
-	  }, {
-	    key: 'place',
-
-	    /**
-	     * Places the robot at an arbitrary point on the board
-	     * @param {number} x - the X coordinate of the location
-	     * @param {number} y - the Y coordinate of the location
-	     * @param {string} f - the compass heading of the location
-	     */
-	    value: function place() {
-	      var X = arguments[0] === undefined ? 0 : arguments[0];
-	      var Y = arguments[1] === undefined ? 0 : arguments[1];
-	      var F = arguments[2] === undefined ? 'NORTH' : arguments[2];
-
-	      var x = parseInt(X);
-	      var y = parseInt(Y);
-	      var f = F.toUpperCase();
-	      // X coordinate
-	      this.position.x = this.validateX(x) ? x : _configConfigJson2['default'].robot.position.x;
-	      // Y coordinate
-	      this.position.y = this.validateY(y) ? y : _configConfigJson2['default'].robot.position.y;
-	      // Heading
-	      this.position.f = this.validateF(f) ? f : _configConfigJson2['default'].robot.position.f;
-	      // Rotation
-	      this.position.r = this.validateF(f) ? _configConfigJson2['default'].headings[f].r : _configConfigJson2['default'].headings[_configConfigJson2['default'].robot.position.f].r;
-	      // Absolute rotation
-	      this.position.a = this.validateF(f) ? _configConfigJson2['default'].headings[f].r : _configConfigJson2['default'].headings[_configConfigJson2['default'].robot.position.f].r;
-
-	      if (this.placed === false) {
-	        this.render();
-	        this.placed = true;
-	      }
-
-	      this.animate();
-	    }
-	  }, {
-	    key: 'move',
-
-	    /**
-	     * Moves the robot according to its current heading
-	     */
-	    value: function move() {
-	      if (this.placed === true) {
-	        var newPosition = _configConfigJson2['default'].headings[this.position.f];
-
-	        this.position.x = this.validateX(this.position.x + newPosition.x) ? this.position.x + newPosition.x : this.position.x;
-	        this.position.y = this.validateY(this.position.y + newPosition.y) ? this.position.y + newPosition.y : this.position.y;
-
-	        this.animate();
-	      } else {
-	        throw new Error(this.name + ' has not been placed.');
-	      }
-	    }
-	  }, {
-	    key: 'rotate',
-
-	    /**
-	     * Rotates the robot to a new heading
-	     * @param {string} heading - either 'left' or 'right'
-	     */
-	    value: function rotate(heading) {
-	      if (this.placed === true) {
-	        if (heading === 'left') {
-	          this.position.a -= _configConfigJson2['default'].increment;
-	          this.position.r -= _configConfigJson2['default'].increment;
-	          if (this.position.r < 0) {
-	            this.position.r += 360;
-	          } else if (this.position.r >= 360) {
-	            this.position.r -= 360;
-	          }
-	        } else if (heading === 'right') {
-	          this.position.a += _configConfigJson2['default'].increment;
-	          this.position.r += _configConfigJson2['default'].increment;
-	          if (this.position.r < 0) {
-	            this.position.r += 360;
-	          } else if (this.position.r >= 360) {
-	            this.position.r -= 360;
-	          }
-	        }
-
-	        for (var key in _configConfigJson2['default'].headings) {
-	          if (this.position.r === _configConfigJson2['default'].headings[key].r) {
-	            this.position.f = key;
-	          }
-	        }
-
-	        this.animate();
-	      } else {
-	        throw new Error(this.name + ' has not been placed.');
-	      }
-	    }
-	  }, {
-	    key: 'left',
-
-	    /**
-	     * Proxy function to rotate from speech and text parser
-	     */
-	    value: function left() {
-	      this.rotate('left');
-	    }
-	  }, {
-	    key: 'right',
-
-	    /**
-	     * Proxy function to rotate from speech and text parser
-	     */
-	    value: function right() {
-	      this.rotate('right');
-	    }
-	  }, {
-	    key: 'report',
-
-	    /**
-	     * Announces the position and bearing of the robot
-	     */
-	    value: function report() {
-	      var log = { coords: false, message: false };
-
-	      if (this.placed === true) {
-	        log.coords = {
-	          X: this.position.x,
-	          Y: this.position.y,
-	          F: this.position.f
-	        };
-	        log.message = '' + this.name + ' is at X' + this.position.x + ', Y' + this.position.y + ' and facing ' + this.position.f.toLowerCase();
-	      } else {
-	        log.coords = false;
-	        log = '' + this.name + ' is not yet on the board';
-	      }
-
-	      var event = new CustomEvent('broadcast', { detail: log });
-	      document.dispatchEvent(event);
-	    }
-	  }, {
-	    key: 'listen',
-
-	    /**
-	     * Listens for arrow and space key events
-	     */
-	    value: function listen() {
-	      document.addEventListener('keydown', this.handleKeypress.bind(this));
-	      document.addEventListener('click', this.handleClick.bind(this));
-	    }
-	  }, {
-	    key: 'handleKeypress',
-
-	    /**
-	     * Handles keypresses from arrow, enter and space key listener
-	     * @param {Event} event - the keydown event
-	     */
-	    value: function handleKeypress(event) {
-	      var mapping = _configConfigJson2['default'].mappings[event.which];
-
-	      if (event.target.nodeName !== 'INPUT' && this.moving === false && mapping && typeof this[mapping.command] === 'function') {
-	        event.preventDefault();
-	        var args = mapping.arguments || [];
-	        this[mapping.command].apply(this, mapping.arguments);
-	      }
-	    }
-	  }, {
-	    key: 'handleClick',
-
-	    /**
-	     * Handles clicks
-	     * @param {Event} event - the click or touch event
-	     */
-	    value: function handleClick(event) {
-	      if (event.target.getAttribute('data-action') && this.moving === false) {
-	        event.preventDefault();
-	        event.stopPropagation();
-
-	        var command = event.target.getAttribute('data-action');
-	        if (typeof this[command] === 'function') {
-	          this[command]();
-	        }
-	      }
-	    }
-	  }, {
-	    key: 'registerCommands',
-
-	    /**
-	     * Registers commands that pertain to this robot instance
-	     * @param {Event} event - the keydown event
-	     */
-	    value: function registerCommands() {
-	      var self = this;
-
-	      var commands = _configConfigJson2['default'].commands.map(function (i) {
-	        var cmd = {
-	          name: i.name,
-	          command: new RegExp(i.command, 'i'),
-	          action: function action() {
-	            self[i.action].apply(self, arguments);
-	          }
-	        };
-
-	        return cmd;
-	      });
-
-	      return commands;
-	    }
-	  }]);
-
-	  return Robot;
-	})();
-
-	exports['default'] = Robot;
-	module.exports = exports['default'];
-
-/***/ },
-/* 5 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
-
-	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-
-	/**
-	 * The reporter class
-	 */
-
-	var Reporter = (function () {
-	  function Reporter(container) {
-	    _classCallCheck(this, Reporter);
-
-	    try {
-	      this.container = document.querySelector(container);
-	    } catch (e) {
-	      return console.error('No container was specified for the reporter');
-	    }
-	  }
-
-	  _createClass(Reporter, [{
-	    key: 'report',
-	    value: function report(event) {
-	      console.log(event.detail.coords);
-	      this.listItem(event.detail.message);
-	    }
-	  }, {
-	    key: 'listItem',
-	    value: function listItem(val) {
-	      var li = document.createElement('li');
-	      li.innerHTML = val;
-	      this.container.insertBefore(li, this.container.firstChild);
-	    }
-	  }, {
-	    key: 'listen',
-	    value: function listen() {
-	      document.addEventListener('broadcast', this.report.bind(this));
-	    }
-	  }]);
-
-	  return Reporter;
-	})();
-
-	exports['default'] = Reporter;
-	module.exports = exports['default'];
-
-/***/ },
-/* 6 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
-
-	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-
-	var _configConfigJson = __webpack_require__(2);
-
-	var _configConfigJson2 = _interopRequireDefault(_configConfigJson);
-
-	var _mumbleJs = __webpack_require__(7);
-
-	var _mumbleJs2 = _interopRequireDefault(_mumbleJs);
-
-	var _robot = __webpack_require__(4);
-
-	var _robot2 = _interopRequireDefault(_robot);
-
-	Object.freeze(_configConfigJson2['default']);
-
-	var TextParser = (function () {
-	  function TextParser(robot) {
-	    _classCallCheck(this, TextParser);
-
-	    if (!robot instanceof _robot2['default']) {
-	      throw new Error('Parser needs to connect to an instantiated robot');
-	    }
-
-	    this.queue = [];
-
-	    this.robot = robot;
-
-	    this.commands = this.robot.registerCommands();
-
-	    this.digesting = true;
-
-	    this.digest();
-	  }
-
-	  _createClass(TextParser, [{
-	    key: 'digest',
-	    value: function digest() {
-	      var self = this;
-	      setTimeout(function () {
-	        requestAnimationFrame(self.digest.bind(self));
-	        if (self.queue.length) {
-	          self.readLn.call(self, self.queue[0]);
-	          self.queue.shift();
-	        }
-	      }, _configConfigJson2['default'].digest);
-	    }
-	  }, {
-	    key: 'cancelDigest',
-	    value: function cancelDigest() {
-	      this.digesting = false;
-	    }
-	  }, {
-	    key: 'readLn',
-	    value: function readLn(ln) {
-	      var args = [];
-	      var command = this.commands.filter(function (i) {
-	        var match = ln.trim().match(i.command);
-	        if (match) args = match.slice(1, match.length);
-	        return match;
-	      });
-	      try {
-	        command[0].action.apply(self.robot, args);
-	      } catch (e) {
-	        this.queue = [];
-	        throw new Error(e.message);
-	      }
-	    }
-	  }, {
-	    key: 'enqueue',
-	    value: function enqueue(event) {
-	      this.queue = this.queue.concat(event.target.result.trim().split('\n'));
-	    }
-	  }, {
-	    key: 'loadFile',
-	    value: function loadFile(event) {
-	      event.stopPropagation();
-	      event.preventDefault();
-
-	      document.documentElement.removeAttribute('data-file');
-
-	      var file = event.dataTransfer.files[0];
-	      var reader = new FileReader();
-
-	      reader.onload = this.enqueue.bind(this);
-	      reader.readAsText(file);
-	    }
-	  }, {
-	    key: 'addDropState',
-	    value: function addDropState(event) {
-	      event.stopPropagation();
-	      event.preventDefault();
-	      document.documentElement.setAttribute('data-file', '');
-	    }
-	  }, {
-	    key: 'removeDropState',
-	    value: function removeDropState(event) {
-	      event.stopPropagation();
-	      event.preventDefault();
-	      document.documentElement.removeAttribute('data-file');
-	    }
-	  }, {
-	    key: 'listen',
-	    value: function listen() {
-	      document.documentElement.addEventListener('dragover', this.addDropState.bind(this));
-	      document.documentElement.addEventListener('dragend', this.removeDropState.bind(this));
-	      document.documentElement.addEventListener('dragleave', this.removeDropState.bind(this));
-	      document.documentElement.addEventListener('drop', this.loadFile.bind(this));
-	    }
-	  }]);
-
-	  return TextParser;
-	})();
-
-	exports['default'] = TextParser;
-	module.exports = exports['default'];
-
-/***/ },
-/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*!*
@@ -1327,6 +775,566 @@
 	));
 
 /***/ },
+/* 4 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, '__esModule', {
+	  value: true
+	});
+
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+	var _configConfigJson = __webpack_require__(2);
+
+	var _configConfigJson2 = _interopRequireDefault(_configConfigJson);
+
+	var _grid = __webpack_require__(5);
+
+	var _grid2 = _interopRequireDefault(_grid);
+
+	var _objectAssign = __webpack_require__(6);
+
+	var _objectAssign2 = _interopRequireDefault(_objectAssign);
+
+	Object.freeze(_configConfigJson2['default']);
+
+	/**
+	 * The robot class
+	 */
+
+	var Robot = (function () {
+
+	  /**
+	   * Overrides default robot settings and bootstraps the module
+	   * @param {Object} args - overrides for the standard robot config
+	   */
+
+	  function Robot(args) {
+	    _classCallCheck(this, Robot);
+
+	    (0, _objectAssign2['default'])(this, _configConfigJson2['default'].robot, args);
+
+	    /** @type {boolean} */
+	    this.placed = false;
+	    /** @type {boolean} */
+	    this.moving = false;
+	    /** @type {node} */
+	    this.robot = null;
+	    /** @type {array} */
+	    this.queue = [];
+	  }
+
+	  _createClass(Robot, [{
+	    key: 'render',
+
+	    /**
+	     * Renders the robot in proximity to the grid element
+	     */
+	    value: function render() {
+	      this.robot = document.createElement('div');
+	      this.robot.style.width = this.robot.style.height = '' + this.grid.size * 0.6 + 'px';
+	      this.robot.style.margin = '' + this.grid.size * 0.2 + 'px';
+	      this.robot.id = 'robot';
+	      this.grid.el.appendChild(this.robot);
+	    }
+	  }, {
+	    key: 'animate',
+
+	    /**
+	     * Manoeuvres the robot according to its current state
+	     */
+	    value: function animate() {
+	      this.robot.style.transform = 'translate3d(' + this.position.x * this.grid.size + 'px, -' + this.position.y * this.grid.size + 'px, ' + _configConfigJson2['default'].robot.hover + 'px) rotate(' + this.position.a + 'deg)';
+	      this.robot.style.webkitTransform = 'translate3d(' + this.position.x * this.grid.size + 'px, -' + this.position.y * this.grid.size + 'px, ' + _configConfigJson2['default'].robot.hover + 'px) rotate(' + this.position.a + 'deg)';
+	      this.robot.setAttribute('data-heading', this.position.f.toLowerCase());
+	    }
+	  }, {
+	    key: 'connectTo',
+
+	    /**
+	     * Attaches the robot to the grid of choice
+	     * @param {Grid} grid - the instantiated grid object
+	     */
+	    value: function connectTo(grid) {
+	      if (grid instanceof _grid2['default'] === false) {
+	        throw new Error('first argument must be a grid instance');
+	      }
+	      this.grid = grid;
+	    }
+	  }, {
+	    key: 'validateX',
+
+	    /**
+	     * Validates X as a coordinate on the board
+	     * @param {number} x - the desired new X coordinate
+	     */
+	    value: function validateX(x) {
+	      return typeof x === 'number' && x < this.grid.columns && x >= 0 ? true : false;
+	    }
+	  }, {
+	    key: 'validateY',
+
+	    /**
+	     * Validates Y as a coordinate on the board
+	     * @param {number} y - the desired new Y coordinate
+	     */
+	    value: function validateY(y) {
+	      return typeof y === 'number' && y < this.grid.rows && y >= 0 ? true : false;
+	    }
+	  }, {
+	    key: 'validateF',
+
+	    /**
+	     * Validates F as a bearing reference contained in the config file
+	     * @param {string} f - the uppercase compass direction
+	     */
+	    value: function validateF(f) {
+	      return typeof f === 'string' && typeof _configConfigJson2['default'].headings[f] === 'object' ? true : false;
+	    }
+	  }, {
+	    key: 'place',
+
+	    /**
+	     * Places the robot at an arbitrary point on the board
+	     * @param {number} x - the X coordinate of the location
+	     * @param {number} y - the Y coordinate of the location
+	     * @param {string} f - the compass heading of the location
+	     */
+	    value: function place() {
+	      var X = arguments[0] === undefined ? 0 : arguments[0];
+	      var Y = arguments[1] === undefined ? 0 : arguments[1];
+	      var F = arguments[2] === undefined ? 'NORTH' : arguments[2];
+
+	      var x = parseInt(X);
+	      var y = parseInt(Y);
+	      var f = F.toUpperCase();
+	      // X coordinate
+	      this.position.x = this.validateX(x) ? x : _configConfigJson2['default'].robot.position.x;
+	      // Y coordinate
+	      this.position.y = this.validateY(y) ? y : _configConfigJson2['default'].robot.position.y;
+	      // Heading
+	      this.position.f = this.validateF(f) ? f : _configConfigJson2['default'].robot.position.f;
+	      // Rotation
+	      this.position.r = this.validateF(f) ? _configConfigJson2['default'].headings[f].r : _configConfigJson2['default'].headings[_configConfigJson2['default'].robot.position.f].r;
+	      // Absolute rotation
+	      this.position.a = this.validateF(f) ? _configConfigJson2['default'].headings[f].r : _configConfigJson2['default'].headings[_configConfigJson2['default'].robot.position.f].r;
+
+	      if (this.placed === false) {
+	        this.render();
+	        this.placed = true;
+	      }
+
+	      this.animate();
+	    }
+	  }, {
+	    key: 'move',
+
+	    /**
+	     * Moves the robot according to its current heading
+	     */
+	    value: function move() {
+	      if (this.placed === true) {
+	        var newPosition = _configConfigJson2['default'].headings[this.position.f];
+
+	        this.position.x = this.validateX(this.position.x + newPosition.x) ? this.position.x + newPosition.x : this.position.x;
+	        this.position.y = this.validateY(this.position.y + newPosition.y) ? this.position.y + newPosition.y : this.position.y;
+
+	        this.animate();
+	      } else {
+	        throw new Error(this.name + ' has not been placed.');
+	      }
+	    }
+	  }, {
+	    key: 'rotate',
+
+	    /**
+	     * Rotates the robot to a new heading
+	     * @param {string} heading - either 'left' or 'right'
+	     */
+	    value: function rotate(heading) {
+	      if (this.placed === true) {
+	        if (heading === 'left') {
+	          this.position.a -= _configConfigJson2['default'].increment;
+	          this.position.r -= _configConfigJson2['default'].increment;
+	          if (this.position.r < 0) {
+	            this.position.r += 360;
+	          } else if (this.position.r >= 360) {
+	            this.position.r -= 360;
+	          }
+	        } else if (heading === 'right') {
+	          this.position.a += _configConfigJson2['default'].increment;
+	          this.position.r += _configConfigJson2['default'].increment;
+	          if (this.position.r < 0) {
+	            this.position.r += 360;
+	          } else if (this.position.r >= 360) {
+	            this.position.r -= 360;
+	          }
+	        }
+
+	        for (var key in _configConfigJson2['default'].headings) {
+	          if (this.position.r === _configConfigJson2['default'].headings[key].r) {
+	            this.position.f = key;
+	          }
+	        }
+
+	        this.animate();
+	      } else {
+	        throw new Error(this.name + ' has not been placed.');
+	      }
+	    }
+	  }, {
+	    key: 'left',
+
+	    /**
+	     * Proxy function to rotate from speech and text parser
+	     */
+	    value: function left() {
+	      this.rotate('left');
+	    }
+	  }, {
+	    key: 'right',
+
+	    /**
+	     * Proxy function to rotate from speech and text parser
+	     */
+	    value: function right() {
+	      this.rotate('right');
+	    }
+	  }, {
+	    key: 'report',
+
+	    /**
+	     * Announces the position and bearing of the robot
+	     */
+	    value: function report() {
+	      var log = { coords: false, message: false };
+
+	      if (this.placed === true) {
+	        log.coords = {
+	          X: this.position.x,
+	          Y: this.position.y,
+	          F: this.position.f
+	        };
+	        log.message = '' + this.name + ' is at X' + this.position.x + ', Y' + this.position.y + ' and facing ' + this.position.f.toLowerCase();
+	      } else {
+	        log.coords = false;
+	        log = '' + this.name + ' is not yet on the board';
+	      }
+
+	      var event = new CustomEvent('broadcast', { detail: log });
+	      document.dispatchEvent(event);
+	    }
+	  }, {
+	    key: 'listen',
+
+	    /**
+	     * Listens for arrow and space key events
+	     */
+	    value: function listen() {
+	      document.addEventListener('keydown', this.handleKeypress.bind(this));
+	      document.addEventListener('click', this.handleClick.bind(this));
+	    }
+	  }, {
+	    key: 'handleKeypress',
+
+	    /**
+	     * Handles keypresses from arrow, enter and space key listener
+	     * @param {Event} event - the keydown event
+	     */
+	    value: function handleKeypress(event) {
+	      var mapping = _configConfigJson2['default'].mappings[event.which];
+
+	      if (event.target.nodeName !== 'INPUT' && this.moving === false && mapping && typeof this[mapping.command] === 'function') {
+	        event.preventDefault();
+	        var args = mapping.arguments || [];
+	        this[mapping.command].apply(this, mapping.arguments);
+	      }
+	    }
+	  }, {
+	    key: 'handleClick',
+
+	    /**
+	     * Handles clicks
+	     * @param {Event} event - the click or touch event
+	     */
+	    value: function handleClick(event) {
+	      if (event.target.getAttribute('data-action') && this.moving === false) {
+	        event.preventDefault();
+	        event.stopPropagation();
+
+	        var command = event.target.getAttribute('data-action');
+	        if (typeof this[command] === 'function') {
+	          this[command]();
+	        }
+	      }
+	    }
+	  }, {
+	    key: 'registerCommands',
+
+	    /**
+	     * Registers commands that pertain to this robot instance
+	     * @param {Event} event - the keydown event
+	     */
+	    value: function registerCommands() {
+	      var self = this;
+
+	      var commands = _configConfigJson2['default'].commands.map(function (i) {
+	        var cmd = {
+	          name: i.name,
+	          command: new RegExp(i.command, 'i'),
+	          action: function action() {
+	            self[i.action].apply(self, arguments);
+	          }
+	        };
+
+	        return cmd;
+	      });
+
+	      return commands;
+	    }
+	  }]);
+
+	  return Robot;
+	})();
+
+	exports['default'] = Robot;
+	module.exports = exports['default'];
+
+/***/ },
+/* 5 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, '__esModule', {
+	  value: true
+	});
+
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+	var _configConfigJson = __webpack_require__(2);
+
+	var _configConfigJson2 = _interopRequireDefault(_configConfigJson);
+
+	var _objectAssign = __webpack_require__(6);
+
+	var _objectAssign2 = _interopRequireDefault(_objectAssign);
+
+	Object.freeze(_configConfigJson2['default']);
+
+	var startX = null;
+	var startY = null;
+
+	var Grid = (function () {
+	  function Grid(args) {
+	    _classCallCheck(this, Grid);
+
+	    (0, _objectAssign2['default'])(this, _configConfigJson2['default'].grid, args);
+	    this.el = document.querySelector(this.container);
+	    this.offsetX = 0;
+	    this.offsetY = 0;
+	  }
+
+	  _createClass(Grid, [{
+	    key: 'createCanvas',
+	    value: function createCanvas() {
+	      this.canvas = document.createElement('canvas');
+	      this.el.appendChild(this.canvas);
+	      this.canvas.draggable = true;
+	      this.canvas.width = this.columns * this.size;
+	      this.canvas.height = this.rows * this.size;
+	      this.ctx = this.canvas.getContext('2d');
+	    }
+	  }, {
+	    key: 'layout',
+	    value: function layout() {
+	      this.ctx.strokeStyle = this.lines.color;
+	      this.ctx.lineWidth = this.lines.width;
+	      if (!this.ctx || !this.ctx instanceof CanvasRenderingContext2D) {
+	        throw new Error('Grid.ctx is not a canvas element');
+	      }
+	      for (var y = 0; y < this.rows; y++) {
+	        for (var x = 0; x < this.columns; x++) {
+	          this.draw(x, y);
+	        }
+	      }
+	    }
+	  }, {
+	    key: 'draw',
+	    value: function draw(x, y) {
+	      var fromX = x * this.size + this.lines.width / 2;
+	      var fromY = y * this.size + this.lines.width / 2;
+	      var toX = this.size - this.lines.width;
+	      var toY = this.size - this.lines.width;
+	      this.ctx.strokeRect(fromX, fromY, toX, toY);
+	    }
+	  }, {
+	    key: 'checkTouch',
+	    value: function checkTouch(event) {
+	      return event.changedTouches ? event.changedTouches[0] : event;
+	    }
+	  }, {
+	    key: 'startRotate',
+	    value: function startRotate(event) {
+	      if (event.target === this.canvas) {
+	        event.preventDefault();
+	        startX = this.checkTouch(event).pageX - this.offsetX;
+	        startY = this.checkTouch(event).pageY - this.offsetY;
+	        document.documentElement.setAttribute('data-dragging', '');
+	      }
+	    }
+	  }, {
+	    key: 'stopRotate',
+	    value: function stopRotate(event) {
+	      if (startX || startY) {
+	        event.preventDefault();
+	        startX = null;
+	        startY = null;
+	        document.documentElement.removeAttribute('data-dragging');
+	      }
+	    }
+	  }, {
+	    key: 'rotate',
+	    value: function rotate(event) {
+	      if (startX && startY) {
+	        event.preventDefault();
+	        this.offsetX = this.clamp(this.checkTouch(event).pageX - startX, 60);
+	        this.offsetY = this.clamp(this.checkTouch(event).pageY - startY, 60, 0);
+	        this.canvas.parentNode.style.transform = 'perspective(1000px) rotateX(' + this.offsetY + 'deg) rotateZ(' + this.offsetX + 'deg)';
+	        this.canvas.parentNode.style.webkitTransform = 'perspective(1000px) rotateX(' + this.offsetY + 'deg) rotateZ(' + this.offsetX + 'deg)';
+	      }
+	    }
+	  }, {
+	    key: 'clamp',
+	    value: function clamp(value) {
+	      var max = arguments[1] === undefined ? 60 : arguments[1];
+	      var min = arguments[2] === undefined ? 60 : arguments[2];
+
+	      if (value > max) {
+	        return max;
+	      } else if (value < -min) {
+	        return -min;
+	      } else {
+	        return value;
+	      }
+	    }
+	  }, {
+	    key: 'listen',
+	    value: function listen() {
+	      document.addEventListener('mousedown', this.startRotate.bind(this));
+	      document.addEventListener('mousemove', this.rotate.bind(this));
+	      document.addEventListener('mouseup', this.stopRotate.bind(this));
+
+	      document.addEventListener('touchstart', this.startRotate.bind(this));
+	      document.addEventListener('touchmove', this.rotate.bind(this));
+	      document.addEventListener('touchend', this.stopRotate.bind(this));
+	    }
+	  }]);
+
+	  return Grid;
+	})();
+
+	exports['default'] = Grid;
+	module.exports = exports['default'];
+
+/***/ },
+/* 6 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	function ToObject(val) {
+		if (val == null) {
+			throw new TypeError('Object.assign cannot be called with null or undefined');
+		}
+
+		return Object(val);
+	}
+
+	module.exports = Object.assign || function (target, source) {
+		var from;
+		var keys;
+		var to = ToObject(target);
+
+		for (var s = 1; s < arguments.length; s++) {
+			from = arguments[s];
+			keys = Object.keys(Object(from));
+
+			for (var i = 0; i < keys.length; i++) {
+				to[keys[i]] = from[keys[i]];
+			}
+		}
+
+		return to;
+	};
+
+
+/***/ },
+/* 7 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, '__esModule', {
+	  value: true
+	});
+
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+	/**
+	 * The reporter class
+	 */
+
+	var Reporter = (function () {
+	  function Reporter(container) {
+	    _classCallCheck(this, Reporter);
+
+	    try {
+	      this.container = document.querySelector(container);
+	    } catch (e) {
+	      return console.error('No container was specified for the reporter');
+	    }
+	  }
+
+	  _createClass(Reporter, [{
+	    key: 'report',
+	    value: function report(event) {
+	      console.log(event.detail.coords);
+	      this.listItem(event.detail.message);
+	    }
+	  }, {
+	    key: 'listItem',
+	    value: function listItem(val) {
+	      var li = document.createElement('li');
+	      li.innerHTML = val;
+	      this.container.insertBefore(li, this.container.firstChild);
+	    }
+	  }, {
+	    key: 'listen',
+	    value: function listen() {
+	      document.addEventListener('broadcast', this.report.bind(this));
+	    }
+	  }]);
+
+	  return Reporter;
+	})();
+
+	exports['default'] = Reporter;
+	module.exports = exports['default'];
+
+/***/ },
 /* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -1346,7 +1354,7 @@
 
 	var _configConfigJson2 = _interopRequireDefault(_configConfigJson);
 
-	var _mumbleJs = __webpack_require__(7);
+	var _mumbleJs = __webpack_require__(3);
 
 	var _mumbleJs2 = _interopRequireDefault(_mumbleJs);
 
@@ -1386,6 +1394,853 @@
 
 	exports['default'] = SpeechParser;
 	module.exports = exports['default'];
+
+/***/ },
+/* 9 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;;(function () {
+		'use strict';
+
+		/**
+		 * @preserve FastClick: polyfill to remove click delays on browsers with touch UIs.
+		 *
+		 * @codingstandard ftlabs-jsv2
+		 * @copyright The Financial Times Limited [All Rights Reserved]
+		 * @license MIT License (see LICENSE.txt)
+		 */
+
+		/*jslint browser:true, node:true*/
+		/*global define, Event, Node*/
+
+
+		/**
+		 * Instantiate fast-clicking listeners on the specified layer.
+		 *
+		 * @constructor
+		 * @param {Element} layer The layer to listen on
+		 * @param {Object} [options={}] The options to override the defaults
+		 */
+		function FastClick(layer, options) {
+			var oldOnClick;
+
+			options = options || {};
+
+			/**
+			 * Whether a click is currently being tracked.
+			 *
+			 * @type boolean
+			 */
+			this.trackingClick = false;
+
+
+			/**
+			 * Timestamp for when click tracking started.
+			 *
+			 * @type number
+			 */
+			this.trackingClickStart = 0;
+
+
+			/**
+			 * The element being tracked for a click.
+			 *
+			 * @type EventTarget
+			 */
+			this.targetElement = null;
+
+
+			/**
+			 * X-coordinate of touch start event.
+			 *
+			 * @type number
+			 */
+			this.touchStartX = 0;
+
+
+			/**
+			 * Y-coordinate of touch start event.
+			 *
+			 * @type number
+			 */
+			this.touchStartY = 0;
+
+
+			/**
+			 * ID of the last touch, retrieved from Touch.identifier.
+			 *
+			 * @type number
+			 */
+			this.lastTouchIdentifier = 0;
+
+
+			/**
+			 * Touchmove boundary, beyond which a click will be cancelled.
+			 *
+			 * @type number
+			 */
+			this.touchBoundary = options.touchBoundary || 10;
+
+
+			/**
+			 * The FastClick layer.
+			 *
+			 * @type Element
+			 */
+			this.layer = layer;
+
+			/**
+			 * The minimum time between tap(touchstart and touchend) events
+			 *
+			 * @type number
+			 */
+			this.tapDelay = options.tapDelay || 200;
+
+			/**
+			 * The maximum time for a tap
+			 *
+			 * @type number
+			 */
+			this.tapTimeout = options.tapTimeout || 700;
+
+			if (FastClick.notNeeded(layer)) {
+				return;
+			}
+
+			// Some old versions of Android don't have Function.prototype.bind
+			function bind(method, context) {
+				return function() { return method.apply(context, arguments); };
+			}
+
+
+			var methods = ['onMouse', 'onClick', 'onTouchStart', 'onTouchMove', 'onTouchEnd', 'onTouchCancel'];
+			var context = this;
+			for (var i = 0, l = methods.length; i < l; i++) {
+				context[methods[i]] = bind(context[methods[i]], context);
+			}
+
+			// Set up event handlers as required
+			if (deviceIsAndroid) {
+				layer.addEventListener('mouseover', this.onMouse, true);
+				layer.addEventListener('mousedown', this.onMouse, true);
+				layer.addEventListener('mouseup', this.onMouse, true);
+			}
+
+			layer.addEventListener('click', this.onClick, true);
+			layer.addEventListener('touchstart', this.onTouchStart, false);
+			layer.addEventListener('touchmove', this.onTouchMove, false);
+			layer.addEventListener('touchend', this.onTouchEnd, false);
+			layer.addEventListener('touchcancel', this.onTouchCancel, false);
+
+			// Hack is required for browsers that don't support Event#stopImmediatePropagation (e.g. Android 2)
+			// which is how FastClick normally stops click events bubbling to callbacks registered on the FastClick
+			// layer when they are cancelled.
+			if (!Event.prototype.stopImmediatePropagation) {
+				layer.removeEventListener = function(type, callback, capture) {
+					var rmv = Node.prototype.removeEventListener;
+					if (type === 'click') {
+						rmv.call(layer, type, callback.hijacked || callback, capture);
+					} else {
+						rmv.call(layer, type, callback, capture);
+					}
+				};
+
+				layer.addEventListener = function(type, callback, capture) {
+					var adv = Node.prototype.addEventListener;
+					if (type === 'click') {
+						adv.call(layer, type, callback.hijacked || (callback.hijacked = function(event) {
+							if (!event.propagationStopped) {
+								callback(event);
+							}
+						}), capture);
+					} else {
+						adv.call(layer, type, callback, capture);
+					}
+				};
+			}
+
+			// If a handler is already declared in the element's onclick attribute, it will be fired before
+			// FastClick's onClick handler. Fix this by pulling out the user-defined handler function and
+			// adding it as listener.
+			if (typeof layer.onclick === 'function') {
+
+				// Android browser on at least 3.2 requires a new reference to the function in layer.onclick
+				// - the old one won't work if passed to addEventListener directly.
+				oldOnClick = layer.onclick;
+				layer.addEventListener('click', function(event) {
+					oldOnClick(event);
+				}, false);
+				layer.onclick = null;
+			}
+		}
+
+		/**
+		* Windows Phone 8.1 fakes user agent string to look like Android and iPhone.
+		*
+		* @type boolean
+		*/
+		var deviceIsWindowsPhone = navigator.userAgent.indexOf("Windows Phone") >= 0;
+
+		/**
+		 * Android requires exceptions.
+		 *
+		 * @type boolean
+		 */
+		var deviceIsAndroid = navigator.userAgent.indexOf('Android') > 0 && !deviceIsWindowsPhone;
+
+
+		/**
+		 * iOS requires exceptions.
+		 *
+		 * @type boolean
+		 */
+		var deviceIsIOS = /iP(ad|hone|od)/.test(navigator.userAgent) && !deviceIsWindowsPhone;
+
+
+		/**
+		 * iOS 4 requires an exception for select elements.
+		 *
+		 * @type boolean
+		 */
+		var deviceIsIOS4 = deviceIsIOS && (/OS 4_\d(_\d)?/).test(navigator.userAgent);
+
+
+		/**
+		 * iOS 6.0-7.* requires the target element to be manually derived
+		 *
+		 * @type boolean
+		 */
+		var deviceIsIOSWithBadTarget = deviceIsIOS && (/OS [6-7]_\d/).test(navigator.userAgent);
+
+		/**
+		 * BlackBerry requires exceptions.
+		 *
+		 * @type boolean
+		 */
+		var deviceIsBlackBerry10 = navigator.userAgent.indexOf('BB10') > 0;
+
+		/**
+		 * Determine whether a given element requires a native click.
+		 *
+		 * @param {EventTarget|Element} target Target DOM element
+		 * @returns {boolean} Returns true if the element needs a native click
+		 */
+		FastClick.prototype.needsClick = function(target) {
+			switch (target.nodeName.toLowerCase()) {
+
+			// Don't send a synthetic click to disabled inputs (issue #62)
+			case 'button':
+			case 'select':
+			case 'textarea':
+				if (target.disabled) {
+					return true;
+				}
+
+				break;
+			case 'input':
+
+				// File inputs need real clicks on iOS 6 due to a browser bug (issue #68)
+				if ((deviceIsIOS && target.type === 'file') || target.disabled) {
+					return true;
+				}
+
+				break;
+			case 'label':
+			case 'iframe': // iOS8 homescreen apps can prevent events bubbling into frames
+			case 'video':
+				return true;
+			}
+
+			return (/\bneedsclick\b/).test(target.className);
+		};
+
+
+		/**
+		 * Determine whether a given element requires a call to focus to simulate click into element.
+		 *
+		 * @param {EventTarget|Element} target Target DOM element
+		 * @returns {boolean} Returns true if the element requires a call to focus to simulate native click.
+		 */
+		FastClick.prototype.needsFocus = function(target) {
+			switch (target.nodeName.toLowerCase()) {
+			case 'textarea':
+				return true;
+			case 'select':
+				return !deviceIsAndroid;
+			case 'input':
+				switch (target.type) {
+				case 'button':
+				case 'checkbox':
+				case 'file':
+				case 'image':
+				case 'radio':
+				case 'submit':
+					return false;
+				}
+
+				// No point in attempting to focus disabled inputs
+				return !target.disabled && !target.readOnly;
+			default:
+				return (/\bneedsfocus\b/).test(target.className);
+			}
+		};
+
+
+		/**
+		 * Send a click event to the specified element.
+		 *
+		 * @param {EventTarget|Element} targetElement
+		 * @param {Event} event
+		 */
+		FastClick.prototype.sendClick = function(targetElement, event) {
+			var clickEvent, touch;
+
+			// On some Android devices activeElement needs to be blurred otherwise the synthetic click will have no effect (#24)
+			if (document.activeElement && document.activeElement !== targetElement) {
+				document.activeElement.blur();
+			}
+
+			touch = event.changedTouches[0];
+
+			// Synthesise a click event, with an extra attribute so it can be tracked
+			clickEvent = document.createEvent('MouseEvents');
+			clickEvent.initMouseEvent(this.determineEventType(targetElement), true, true, window, 1, touch.screenX, touch.screenY, touch.clientX, touch.clientY, false, false, false, false, 0, null);
+			clickEvent.forwardedTouchEvent = true;
+			targetElement.dispatchEvent(clickEvent);
+		};
+
+		FastClick.prototype.determineEventType = function(targetElement) {
+
+			//Issue #159: Android Chrome Select Box does not open with a synthetic click event
+			if (deviceIsAndroid && targetElement.tagName.toLowerCase() === 'select') {
+				return 'mousedown';
+			}
+
+			return 'click';
+		};
+
+
+		/**
+		 * @param {EventTarget|Element} targetElement
+		 */
+		FastClick.prototype.focus = function(targetElement) {
+			var length;
+
+			// Issue #160: on iOS 7, some input elements (e.g. date datetime month) throw a vague TypeError on setSelectionRange. These elements don't have an integer value for the selectionStart and selectionEnd properties, but unfortunately that can't be used for detection because accessing the properties also throws a TypeError. Just check the type instead. Filed as Apple bug #15122724.
+			if (deviceIsIOS && targetElement.setSelectionRange && targetElement.type.indexOf('date') !== 0 && targetElement.type !== 'time' && targetElement.type !== 'month') {
+				length = targetElement.value.length;
+				targetElement.setSelectionRange(length, length);
+			} else {
+				targetElement.focus();
+			}
+		};
+
+
+		/**
+		 * Check whether the given target element is a child of a scrollable layer and if so, set a flag on it.
+		 *
+		 * @param {EventTarget|Element} targetElement
+		 */
+		FastClick.prototype.updateScrollParent = function(targetElement) {
+			var scrollParent, parentElement;
+
+			scrollParent = targetElement.fastClickScrollParent;
+
+			// Attempt to discover whether the target element is contained within a scrollable layer. Re-check if the
+			// target element was moved to another parent.
+			if (!scrollParent || !scrollParent.contains(targetElement)) {
+				parentElement = targetElement;
+				do {
+					if (parentElement.scrollHeight > parentElement.offsetHeight) {
+						scrollParent = parentElement;
+						targetElement.fastClickScrollParent = parentElement;
+						break;
+					}
+
+					parentElement = parentElement.parentElement;
+				} while (parentElement);
+			}
+
+			// Always update the scroll top tracker if possible.
+			if (scrollParent) {
+				scrollParent.fastClickLastScrollTop = scrollParent.scrollTop;
+			}
+		};
+
+
+		/**
+		 * @param {EventTarget} targetElement
+		 * @returns {Element|EventTarget}
+		 */
+		FastClick.prototype.getTargetElementFromEventTarget = function(eventTarget) {
+
+			// On some older browsers (notably Safari on iOS 4.1 - see issue #56) the event target may be a text node.
+			if (eventTarget.nodeType === Node.TEXT_NODE) {
+				return eventTarget.parentNode;
+			}
+
+			return eventTarget;
+		};
+
+
+		/**
+		 * On touch start, record the position and scroll offset.
+		 *
+		 * @param {Event} event
+		 * @returns {boolean}
+		 */
+		FastClick.prototype.onTouchStart = function(event) {
+			var targetElement, touch, selection;
+
+			// Ignore multiple touches, otherwise pinch-to-zoom is prevented if both fingers are on the FastClick element (issue #111).
+			if (event.targetTouches.length > 1) {
+				return true;
+			}
+
+			targetElement = this.getTargetElementFromEventTarget(event.target);
+			touch = event.targetTouches[0];
+
+			if (deviceIsIOS) {
+
+				// Only trusted events will deselect text on iOS (issue #49)
+				selection = window.getSelection();
+				if (selection.rangeCount && !selection.isCollapsed) {
+					return true;
+				}
+
+				if (!deviceIsIOS4) {
+
+					// Weird things happen on iOS when an alert or confirm dialog is opened from a click event callback (issue #23):
+					// when the user next taps anywhere else on the page, new touchstart and touchend events are dispatched
+					// with the same identifier as the touch event that previously triggered the click that triggered the alert.
+					// Sadly, there is an issue on iOS 4 that causes some normal touch events to have the same identifier as an
+					// immediately preceeding touch event (issue #52), so this fix is unavailable on that platform.
+					// Issue 120: touch.identifier is 0 when Chrome dev tools 'Emulate touch events' is set with an iOS device UA string,
+					// which causes all touch events to be ignored. As this block only applies to iOS, and iOS identifiers are always long,
+					// random integers, it's safe to to continue if the identifier is 0 here.
+					if (touch.identifier && touch.identifier === this.lastTouchIdentifier) {
+						event.preventDefault();
+						return false;
+					}
+
+					this.lastTouchIdentifier = touch.identifier;
+
+					// If the target element is a child of a scrollable layer (using -webkit-overflow-scrolling: touch) and:
+					// 1) the user does a fling scroll on the scrollable layer
+					// 2) the user stops the fling scroll with another tap
+					// then the event.target of the last 'touchend' event will be the element that was under the user's finger
+					// when the fling scroll was started, causing FastClick to send a click event to that layer - unless a check
+					// is made to ensure that a parent layer was not scrolled before sending a synthetic click (issue #42).
+					this.updateScrollParent(targetElement);
+				}
+			}
+
+			this.trackingClick = true;
+			this.trackingClickStart = event.timeStamp;
+			this.targetElement = targetElement;
+
+			this.touchStartX = touch.pageX;
+			this.touchStartY = touch.pageY;
+
+			// Prevent phantom clicks on fast double-tap (issue #36)
+			if ((event.timeStamp - this.lastClickTime) < this.tapDelay) {
+				event.preventDefault();
+			}
+
+			return true;
+		};
+
+
+		/**
+		 * Based on a touchmove event object, check whether the touch has moved past a boundary since it started.
+		 *
+		 * @param {Event} event
+		 * @returns {boolean}
+		 */
+		FastClick.prototype.touchHasMoved = function(event) {
+			var touch = event.changedTouches[0], boundary = this.touchBoundary;
+
+			if (Math.abs(touch.pageX - this.touchStartX) > boundary || Math.abs(touch.pageY - this.touchStartY) > boundary) {
+				return true;
+			}
+
+			return false;
+		};
+
+
+		/**
+		 * Update the last position.
+		 *
+		 * @param {Event} event
+		 * @returns {boolean}
+		 */
+		FastClick.prototype.onTouchMove = function(event) {
+			if (!this.trackingClick) {
+				return true;
+			}
+
+			// If the touch has moved, cancel the click tracking
+			if (this.targetElement !== this.getTargetElementFromEventTarget(event.target) || this.touchHasMoved(event)) {
+				this.trackingClick = false;
+				this.targetElement = null;
+			}
+
+			return true;
+		};
+
+
+		/**
+		 * Attempt to find the labelled control for the given label element.
+		 *
+		 * @param {EventTarget|HTMLLabelElement} labelElement
+		 * @returns {Element|null}
+		 */
+		FastClick.prototype.findControl = function(labelElement) {
+
+			// Fast path for newer browsers supporting the HTML5 control attribute
+			if (labelElement.control !== undefined) {
+				return labelElement.control;
+			}
+
+			// All browsers under test that support touch events also support the HTML5 htmlFor attribute
+			if (labelElement.htmlFor) {
+				return document.getElementById(labelElement.htmlFor);
+			}
+
+			// If no for attribute exists, attempt to retrieve the first labellable descendant element
+			// the list of which is defined here: http://www.w3.org/TR/html5/forms.html#category-label
+			return labelElement.querySelector('button, input:not([type=hidden]), keygen, meter, output, progress, select, textarea');
+		};
+
+
+		/**
+		 * On touch end, determine whether to send a click event at once.
+		 *
+		 * @param {Event} event
+		 * @returns {boolean}
+		 */
+		FastClick.prototype.onTouchEnd = function(event) {
+			var forElement, trackingClickStart, targetTagName, scrollParent, touch, targetElement = this.targetElement;
+
+			if (!this.trackingClick) {
+				return true;
+			}
+
+			// Prevent phantom clicks on fast double-tap (issue #36)
+			if ((event.timeStamp - this.lastClickTime) < this.tapDelay) {
+				this.cancelNextClick = true;
+				return true;
+			}
+
+			if ((event.timeStamp - this.trackingClickStart) > this.tapTimeout) {
+				return true;
+			}
+
+			// Reset to prevent wrong click cancel on input (issue #156).
+			this.cancelNextClick = false;
+
+			this.lastClickTime = event.timeStamp;
+
+			trackingClickStart = this.trackingClickStart;
+			this.trackingClick = false;
+			this.trackingClickStart = 0;
+
+			// On some iOS devices, the targetElement supplied with the event is invalid if the layer
+			// is performing a transition or scroll, and has to be re-detected manually. Note that
+			// for this to function correctly, it must be called *after* the event target is checked!
+			// See issue #57; also filed as rdar://13048589 .
+			if (deviceIsIOSWithBadTarget) {
+				touch = event.changedTouches[0];
+
+				// In certain cases arguments of elementFromPoint can be negative, so prevent setting targetElement to null
+				targetElement = document.elementFromPoint(touch.pageX - window.pageXOffset, touch.pageY - window.pageYOffset) || targetElement;
+				targetElement.fastClickScrollParent = this.targetElement.fastClickScrollParent;
+			}
+
+			targetTagName = targetElement.tagName.toLowerCase();
+			if (targetTagName === 'label') {
+				forElement = this.findControl(targetElement);
+				if (forElement) {
+					this.focus(targetElement);
+					if (deviceIsAndroid) {
+						return false;
+					}
+
+					targetElement = forElement;
+				}
+			} else if (this.needsFocus(targetElement)) {
+
+				// Case 1: If the touch started a while ago (best guess is 100ms based on tests for issue #36) then focus will be triggered anyway. Return early and unset the target element reference so that the subsequent click will be allowed through.
+				// Case 2: Without this exception for input elements tapped when the document is contained in an iframe, then any inputted text won't be visible even though the value attribute is updated as the user types (issue #37).
+				if ((event.timeStamp - trackingClickStart) > 100 || (deviceIsIOS && window.top !== window && targetTagName === 'input')) {
+					this.targetElement = null;
+					return false;
+				}
+
+				this.focus(targetElement);
+				this.sendClick(targetElement, event);
+
+				// Select elements need the event to go through on iOS 4, otherwise the selector menu won't open.
+				// Also this breaks opening selects when VoiceOver is active on iOS6, iOS7 (and possibly others)
+				if (!deviceIsIOS || targetTagName !== 'select') {
+					this.targetElement = null;
+					event.preventDefault();
+				}
+
+				return false;
+			}
+
+			if (deviceIsIOS && !deviceIsIOS4) {
+
+				// Don't send a synthetic click event if the target element is contained within a parent layer that was scrolled
+				// and this tap is being used to stop the scrolling (usually initiated by a fling - issue #42).
+				scrollParent = targetElement.fastClickScrollParent;
+				if (scrollParent && scrollParent.fastClickLastScrollTop !== scrollParent.scrollTop) {
+					return true;
+				}
+			}
+
+			// Prevent the actual click from going though - unless the target node is marked as requiring
+			// real clicks or if it is in the whitelist in which case only non-programmatic clicks are permitted.
+			if (!this.needsClick(targetElement)) {
+				event.preventDefault();
+				this.sendClick(targetElement, event);
+			}
+
+			return false;
+		};
+
+
+		/**
+		 * On touch cancel, stop tracking the click.
+		 *
+		 * @returns {void}
+		 */
+		FastClick.prototype.onTouchCancel = function() {
+			this.trackingClick = false;
+			this.targetElement = null;
+		};
+
+
+		/**
+		 * Determine mouse events which should be permitted.
+		 *
+		 * @param {Event} event
+		 * @returns {boolean}
+		 */
+		FastClick.prototype.onMouse = function(event) {
+
+			// If a target element was never set (because a touch event was never fired) allow the event
+			if (!this.targetElement) {
+				return true;
+			}
+
+			if (event.forwardedTouchEvent) {
+				return true;
+			}
+
+			// Programmatically generated events targeting a specific element should be permitted
+			if (!event.cancelable) {
+				return true;
+			}
+
+			// Derive and check the target element to see whether the mouse event needs to be permitted;
+			// unless explicitly enabled, prevent non-touch click events from triggering actions,
+			// to prevent ghost/doubleclicks.
+			if (!this.needsClick(this.targetElement) || this.cancelNextClick) {
+
+				// Prevent any user-added listeners declared on FastClick element from being fired.
+				if (event.stopImmediatePropagation) {
+					event.stopImmediatePropagation();
+				} else {
+
+					// Part of the hack for browsers that don't support Event#stopImmediatePropagation (e.g. Android 2)
+					event.propagationStopped = true;
+				}
+
+				// Cancel the event
+				event.stopPropagation();
+				event.preventDefault();
+
+				return false;
+			}
+
+			// If the mouse event is permitted, return true for the action to go through.
+			return true;
+		};
+
+
+		/**
+		 * On actual clicks, determine whether this is a touch-generated click, a click action occurring
+		 * naturally after a delay after a touch (which needs to be cancelled to avoid duplication), or
+		 * an actual click which should be permitted.
+		 *
+		 * @param {Event} event
+		 * @returns {boolean}
+		 */
+		FastClick.prototype.onClick = function(event) {
+			var permitted;
+
+			// It's possible for another FastClick-like library delivered with third-party code to fire a click event before FastClick does (issue #44). In that case, set the click-tracking flag back to false and return early. This will cause onTouchEnd to return early.
+			if (this.trackingClick) {
+				this.targetElement = null;
+				this.trackingClick = false;
+				return true;
+			}
+
+			// Very odd behaviour on iOS (issue #18): if a submit element is present inside a form and the user hits enter in the iOS simulator or clicks the Go button on the pop-up OS keyboard the a kind of 'fake' click event will be triggered with the submit-type input element as the target.
+			if (event.target.type === 'submit' && event.detail === 0) {
+				return true;
+			}
+
+			permitted = this.onMouse(event);
+
+			// Only unset targetElement if the click is not permitted. This will ensure that the check for !targetElement in onMouse fails and the browser's click doesn't go through.
+			if (!permitted) {
+				this.targetElement = null;
+			}
+
+			// If clicks are permitted, return true for the action to go through.
+			return permitted;
+		};
+
+
+		/**
+		 * Remove all FastClick's event listeners.
+		 *
+		 * @returns {void}
+		 */
+		FastClick.prototype.destroy = function() {
+			var layer = this.layer;
+
+			if (deviceIsAndroid) {
+				layer.removeEventListener('mouseover', this.onMouse, true);
+				layer.removeEventListener('mousedown', this.onMouse, true);
+				layer.removeEventListener('mouseup', this.onMouse, true);
+			}
+
+			layer.removeEventListener('click', this.onClick, true);
+			layer.removeEventListener('touchstart', this.onTouchStart, false);
+			layer.removeEventListener('touchmove', this.onTouchMove, false);
+			layer.removeEventListener('touchend', this.onTouchEnd, false);
+			layer.removeEventListener('touchcancel', this.onTouchCancel, false);
+		};
+
+
+		/**
+		 * Check whether FastClick is needed.
+		 *
+		 * @param {Element} layer The layer to listen on
+		 */
+		FastClick.notNeeded = function(layer) {
+			var metaViewport;
+			var chromeVersion;
+			var blackberryVersion;
+			var firefoxVersion;
+
+			// Devices that don't support touch don't need FastClick
+			if (typeof window.ontouchstart === 'undefined') {
+				return true;
+			}
+
+			// Chrome version - zero for other browsers
+			chromeVersion = +(/Chrome\/([0-9]+)/.exec(navigator.userAgent) || [,0])[1];
+
+			if (chromeVersion) {
+
+				if (deviceIsAndroid) {
+					metaViewport = document.querySelector('meta[name=viewport]');
+
+					if (metaViewport) {
+						// Chrome on Android with user-scalable="no" doesn't need FastClick (issue #89)
+						if (metaViewport.content.indexOf('user-scalable=no') !== -1) {
+							return true;
+						}
+						// Chrome 32 and above with width=device-width or less don't need FastClick
+						if (chromeVersion > 31 && document.documentElement.scrollWidth <= window.outerWidth) {
+							return true;
+						}
+					}
+
+				// Chrome desktop doesn't need FastClick (issue #15)
+				} else {
+					return true;
+				}
+			}
+
+			if (deviceIsBlackBerry10) {
+				blackberryVersion = navigator.userAgent.match(/Version\/([0-9]*)\.([0-9]*)/);
+
+				// BlackBerry 10.3+ does not require Fastclick library.
+				// https://github.com/ftlabs/fastclick/issues/251
+				if (blackberryVersion[1] >= 10 && blackberryVersion[2] >= 3) {
+					metaViewport = document.querySelector('meta[name=viewport]');
+
+					if (metaViewport) {
+						// user-scalable=no eliminates click delay.
+						if (metaViewport.content.indexOf('user-scalable=no') !== -1) {
+							return true;
+						}
+						// width=device-width (or less than device-width) eliminates click delay.
+						if (document.documentElement.scrollWidth <= window.outerWidth) {
+							return true;
+						}
+					}
+				}
+			}
+
+			// IE10 with -ms-touch-action: none or manipulation, which disables double-tap-to-zoom (issue #97)
+			if (layer.style.msTouchAction === 'none' || layer.style.touchAction === 'manipulation') {
+				return true;
+			}
+
+			// Firefox version - zero for other browsers
+			firefoxVersion = +(/Firefox\/([0-9]+)/.exec(navigator.userAgent) || [,0])[1];
+
+			if (firefoxVersion >= 27) {
+				// Firefox 27+ does not have tap delay if the content is not zoomable - https://bugzilla.mozilla.org/show_bug.cgi?id=922896
+
+				metaViewport = document.querySelector('meta[name=viewport]');
+				if (metaViewport && (metaViewport.content.indexOf('user-scalable=no') !== -1 || document.documentElement.scrollWidth <= window.outerWidth)) {
+					return true;
+				}
+			}
+
+			// IE11: prefixed -ms-touch-action is no longer supported and it's recomended to use non-prefixed version
+			// http://msdn.microsoft.com/en-us/library/windows/apps/Hh767313.aspx
+			if (layer.style.touchAction === 'none' || layer.style.touchAction === 'manipulation') {
+				return true;
+			}
+
+			return false;
+		};
+
+
+		/**
+		 * Factory method for creating a FastClick object
+		 *
+		 * @param {Element} layer The layer to listen on
+		 * @param {Object} [options={}] The options to override the defaults
+		 */
+		FastClick.attach = function(layer, options) {
+			return new FastClick(layer, options);
+		};
+
+
+		if (true) {
+
+			// AMD. Register as an anonymous module.
+			!(__WEBPACK_AMD_DEFINE_RESULT__ = function() {
+				return FastClick;
+			}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+		} else if (typeof module !== 'undefined' && module.exports) {
+			module.exports = FastClick.attach;
+			module.exports.FastClick = FastClick;
+		} else {
+			window.FastClick = FastClick;
+		}
+	}());
+
 
 /***/ }
 /******/ ]);
