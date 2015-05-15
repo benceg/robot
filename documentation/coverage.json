@@ -1,0 +1,31 @@
+{
+  "coverage": "100%",
+  "expectCount": 78,
+  "actualCount": 78,
+  "files": {
+    "javascript/classes/grid.js": {
+      "expectCount": 16,
+      "actualCount": 16
+    },
+    "javascript/classes/reporter.js": {
+      "expectCount": 6,
+      "actualCount": 6
+    },
+    "javascript/classes/robot.js": {
+      "expectCount": 25,
+      "actualCount": 25
+    },
+    "javascript/classes/sound-board.js": {
+      "expectCount": 9,
+      "actualCount": 9
+    },
+    "javascript/classes/speech-parser.js": {
+      "expectCount": 6,
+      "actualCount": 6
+    },
+    "javascript/classes/text-parser.js": {
+      "expectCount": 16,
+      "actualCount": 16
+    }
+  }
+}

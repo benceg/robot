@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <base data-ice="baseUrl" href="../../../">
+  <title data-ice="title">javascript/classes/text-parser.js | API Document</title>
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
+  <script src="script/prettify/prettify.js"></script>
+  
+  
+</head>
+<body class="layout-container">
+
+<header>
+  <a href="./">Home</a>
+  <a href="identifiers.html">Identifier</a>
+  <a href="source.html">Source</a>
+  
+  
+  <div class="search-box">
+  <span>
+    <img src="./image/search.png">
+    <span class="search-input-edge"></span><input class="search-input"><span class="search-input-edge"></span>
+  </span>
+    <ul class="search-result"></ul>
+  </div>
+</header>
+
+<nav class="navigation" data-ice="nav"><div data-ice="classWrap">
+  <h2>Class</h2>
+  <ul>
+    
+  <li data-ice="classDoc"><span><a href="class/javascript/classes/grid.js~Grid.html">Grid</a></span></li>
+<li data-ice="classDoc"><span><a href="class/javascript/classes/reporter.js~Reporter.html">Reporter</a></span></li>
+<li data-ice="classDoc"><span><a href="class/javascript/classes/robot.js~Robot.html">Robot</a></span></li>
+<li data-ice="classDoc"><span><a href="class/javascript/classes/sound-board.js~SoundBoard.html">SoundBoard</a></span></li>
+<li data-ice="classDoc"><span><a href="class/javascript/classes/speech-parser.js~SpeechParser.html">SpeechParser</a></span></li>
+<li data-ice="classDoc"><span><a href="class/javascript/classes/text-parser.js~TextParser.html">TextParser</a></span></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+</nav>
+
+<div class="content" data-ice="content"><h1 data-ice="title">javascript/classes/text-parser.js</h1>
+<pre class="source-code line-number"><code class="prettyprint linenums" data-ice="content">import config from &apos;../../config/config.json&apos;;
+import Mumble from &apos;mumble-js&apos;;
+import Robot from &apos;./robot&apos;;
+
+Object.freeze(config);
+
+/**
+ * The text parser class adds the ability to translate a file to commands
+ */
+export default class TextParser
+{
+  
+  /**
+   * Bootstraps the text parser
+   * @param {Robot} robot - a Robot instance
+   */
+  constructor(robot)
+  {
+    if (!(robot instanceof Robot))
+    {
+      throw new Error(&apos;Parser needs to connect to an instantiated robot&apos;);
+    }
+    
+    /** @type {Robot} */
+    this.robot = robot;
+    /** @type {Object} */
+    this.commands = this.robot.registerCommands();
+    /** @type {Array} */
+    this.queue = [];
+    /** @type {boolean} */
+    this.parsing = false;
+    /** @type {number} */
+    this.interval = null;
+  }
+  
+  /**
+   * Invokes a digest cycle for the interpreter
+   */
+  digest() {
+    this.parsing = true;
+    this.interval = setInterval(this.tick.bind(this), config.digest);
+  }
+  
+  /**
+   * Reads the queue line for line or cancels if it reaches zero lines
+   */
+  tick() {
+    if (this.queue.length)
+    {
+      this.readLn.call(this, this.queue[0]);
+      this.queue.shift();
+    }
+    else
+    {
+      this.parsing = false;
+      clearInterval(this.interval);
+    }
+  }
+  
+  /**
+   * Allows manual clearing of the digest cycle
+   */
+  cancelDigest() {
+    clearInterval(this.interval);
+    this.interval = null;
+  }
+  
+  /**
+   * Reads a line and relates it to a command
+   * @param {string} ln - a parsable single line string
+   */
+  readLn(ln) {
+    let args = [];
+    
+    // Find the input command in the list of commands
+    let command = this.commands.filter(function(i)
+    {
+      let match = ln.trim().match(i.command);
+      if (match) args = match.slice(1, match.length);
+      return match;
+    });
+    
+    // Unfortunately we have to go imperative here as opposed to
+    // broadcasting an event as we need to know whether or not to
+    // clear an illegal text input queue on exception
+    try {
+      command[0].action.apply(self.robot, args);
+    } catch(e) {
+      this.queue = [];
+      throw new Error(e.message);
+    }
+  }
+  
+  /**
+   * Creates a queue from the lines of an input file
+   * and invokes the digest cycle
+   * @param {Event} event - a file API onload event
+   */
+  enqueue(event)
+  {
+    this.queue = this.queue.concat(event.target.result.trim().split(&apos;\n&apos;));
+    this.digest();
+  }
+  
+  /**
+   * Loads a file via the drag and drop and file APIs
+   * @param {Event} event - a drop event
+   */
+  loadFile(event)
+  {
+    event.stopPropagation();
+    event.preventDefault();
+    
+    if (this.parsing === false)
+    {
+      document.documentElement.removeAttribute(&apos;data-file&apos;);
+
+      let file = event.dataTransfer.files[0];
+      let reader = new FileReader();
+      
+      reader.onload = this.enqueue.bind(this);
+      reader.readAsText(file);
+    }
+  }
+  
+  /**
+   * Adds a dragged-over state to the document element
+   * @param {Event} event - a dragover event
+   */
+  addDropState(event)
+  {
+    event.stopPropagation();
+    event.preventDefault();
+    if (this.parsing === false) document.documentElement.setAttribute(&apos;data-file&apos;, &apos;&apos;);
+  }
+  
+  /**
+   * Removes a dragged-over state from the document element
+   * @param {Event} event - a dragover event
+   */
+  removeDropState(event)
+  {
+    event.stopPropagation();
+    event.preventDefault();
+    if (this.parsing === false) document.documentElement.removeAttribute(&apos;data-file&apos;);
+  }
+  
+  /**
+   * Bootstraps event listeners
+   */
+  listen()
+  {
+    document.documentElement.addEventListener(&apos;dragover&apos;, this.addDropState.bind(this));
+    document.documentElement.addEventListener(&apos;dragend&apos;, this.removeDropState.bind(this));
+    document.documentElement.addEventListener(&apos;dragleave&apos;, this.removeDropState.bind(this));
+    document.documentElement.addEventListener(&apos;drop&apos;, this.loadFile.bind(this));
+  }
+  
+}</code></pre>
+</div>
+
+<footer class="footer">
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(0.1.1)</span></a>
+</footer>
+
+<script src="script/search_index.js"></script>
+<script src="script/search.js"></script>
+<script src="script/pretty-print.js"></script>
+<script src="script/inherited-summary.js"></script>
+<script src="script/test-summary.js"></script>
+<script src="script/inner-link.js"></script>
+</body>
+</html>

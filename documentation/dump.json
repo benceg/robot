@@ -1,0 +1,2726 @@
+[
+  {
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "javascript/classes/grid.js",
+    "memberof": null,
+    "longname": "javascript/classes/grid.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 1,
+    "content": "import config from '../../config/config.json';\r\nimport ObjectAssign from 'object-assign';\r\n\r\nObject.freeze(config);\r\n\r\nvar startX = null;\r\nvar startY = null\r\n\r\n/**\r\n * The robot class contains all the functions and parameters specific to the grid\r\n */\r\nexport default class Grid\r\n{\r\n  \r\n  /**\r\n   * Overrides default grid settings and bootstraps the module\r\n   * @param {Object} args - overrides for the standard grid config\r\n   */\r\n  constructor(args)\r\n  {\r\n    ObjectAssign(this, config.grid, args);\r\n    /** @type {HTMLElement} */\r\n    this.el = document.querySelector(this.container);\r\n    /** @type {number} */\r\n    this.offsetX = 0;\r\n    /** @type {number} */\r\n    this.offsetY = 0;\r\n    /** @type {HTMLCanvasElement} */\r\n    this.canvas = undefined;\r\n    /** @type {CanvasRenderingContext2D} */\r\n    this.ctx = undefined;\r\n  }\r\n  \r\n  /**\r\n   * Builds the canvas element to a size inferred from the config\r\n   */\r\n  createCanvas()\r\n  {\r\n    this.canvas = document.createElement('canvas');\r\n    this.el.appendChild(this.canvas);\r\n    this.canvas.width = this.columns * this.size;\r\n    this.canvas.height = this.rows * this.size;\r\n    this.ctx = this.canvas.getContext('2d');\r\n  }\r\n  \r\n  /**\r\n   * Lays out the canvas grid in rows and columns\r\n   */\r\n  layout()\r\n  {\r\n    this.ctx.strokeStyle = this.lines.color;\r\n    this.ctx.lineWidth = this.lines.width;\r\n    if (!this.ctx || !(this.ctx instanceof CanvasRenderingContext2D))\r\n    {\r\n      throw new Error('Grid.ctx is not a canvas element');\r\n    }\r\n    for (let y = 0; y < this.rows; y++)\r\n    {\r\n      for (let x = 0; x < this.columns; x++)\r\n      {\r\n        this.draw(x, y);\r\n      }\r\n    }\r\n  }\r\n  \r\n  /**\r\n   * Draws the rectangular grid on the canvas\r\n   * @param {number} x - the starting X coordinate\r\n   * @param {number} y - the starting Y coordinate\r\n   */\r\n  draw(x, y)\r\n  {\r\n    let fromX = x * this.size + this.lines.width / 2;\r\n    let fromY = y * this.size + this.lines.width / 2;\r\n    let toX = this.size - this.lines.width;\r\n    let toY = this.size - this.lines.width;\r\n    this.ctx.strokeRect(fromX, fromY, toX, toY);\r\n  }\r\n  \r\n  /**\r\n   * Ascertains whether the current event is a tap or a click\r\n   * @param {Event} event - a click or touch event\r\n   */\r\n  checkTouch(event) {\r\n    return (event.changedTouches) ? event.changedTouches[0] : event;\r\n  }\r\n  \r\n  /**\r\n   * Instigates the rotation logic on mousedown\r\n   * @param {Event} event - a mousedown or touchstart event\r\n   */\r\n  startRotate(event)\r\n  {\r\n    if (event.target === this.canvas || event.target === this.canvas.parentNode)\r\n    {\r\n      event.preventDefault();\r\n      startX = this.checkTouch(event).pageX - this.offsetX;\r\n      startY = this.checkTouch(event).pageY - this.offsetY;\r\n      document.documentElement.setAttribute('data-dragging', '');\r\n    }\r\n  }\r\n  \r\n  /**\r\n   * Cancels the rotation logic on mouseup\r\n   * @param {Event} event - a mouseup or touchend event\r\n   */\r\n  stopRotate(event)\r\n  {\r\n    if (startX !== null || startY !== null)\r\n    {\r\n      event.preventDefault();\r\n      startX = null;\r\n      startY = null;\r\n      document.documentElement.removeAttribute('data-dragging');\r\n    }\r\n  }\r\n  \r\n  /**\r\n   * Rotates the grid on mousemove\r\n   * @param {Event} event - a mousemove or touchmove event\r\n   */\r\n  rotate(event)\r\n  {\r\n    if(startX !== null && startY !== null)\r\n    {\r\n      event.preventDefault();\r\n      \r\n      this.offsetX = this.clamp((this.checkTouch(event).pageX - startX), this.angle.x[0], this.angle.x[1]);\r\n      this.offsetY = this.clamp((this.checkTouch(event).pageY - startY), this.angle.y[0], this.angle.y[1]);\r\n      \r\n      this.canvas.parentNode.style.transform =\r\n      this.canvas.parentNode.style.webkitTransform =\r\n      this.canvas.parentNode.style.mozTransform =\r\n      this.canvas.parentNode.style.msTransform =\r\n      this.canvas.parentNode.style.oTransform = `perspective(1000px) rotateX(${this.offsetY}deg) rotateZ(${this.offsetX}deg)`;\r\n    }\r\n  }\r\n  \r\n  /**\r\n   * Clamps a rotation value to a positive and negative\r\n   * minimum and maximum integer range\r\n   * @param {number} value - the value to clamp\r\n   * @param {number} max - the maximum positive value\r\n   * @param {number} min - the maximum negative value\r\n   */\r\n  clamp(value, max = 60, min = 60)\r\n  {\r\n    if (value > max) {\r\n      return max;\r\n    } else if (value < -min) {\r\n      return -(min);\r\n    } else {\r\n      return value;\r\n    }\r\n  }\r\n  \r\n  /**\r\n   * Rigs up the listeners for this class\r\n   */\r\n  listen()\r\n  {\r\n    document.addEventListener('mousedown', this.startRotate.bind(this), true);\r\n    document.addEventListener('mousemove', this.rotate.bind(this));\r\n    document.addEventListener('mouseup', this.stopRotate.bind(this));\r\n    \r\n    document.addEventListener('touchstart', this.startRotate.bind(this));\r\n    document.addEventListener('touchmove', this.rotate.bind(this));\r\n    document.addEventListener('touchend', this.stopRotate.bind(this));\r\n  }\r\n  \r\n}"
+  },
+  {
+    "kind": "variable",
+    "static": true,
+    "variation": null,
+    "name": "startX",
+    "memberof": "javascript/classes/grid.js",
+    "longname": "javascript/classes/grid.js~startX",
+    "access": null,
+    "export": false,
+    "importPath": "robot/javascript/classes/grid.js",
+    "importStyle": null,
+    "description": null,
+    "lineNumber": 6,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "variable",
+    "static": true,
+    "variation": null,
+    "name": "startY",
+    "memberof": "javascript/classes/grid.js",
+    "longname": "javascript/classes/grid.js~startY",
+    "access": null,
+    "export": false,
+    "importPath": "robot/javascript/classes/grid.js",
+    "importStyle": null,
+    "description": null,
+    "lineNumber": 7,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "class",
+    "static": true,
+    "variation": null,
+    "name": "Grid",
+    "memberof": "javascript/classes/grid.js",
+    "longname": "javascript/classes/grid.js~Grid",
+    "access": null,
+    "export": true,
+    "importPath": "robot/javascript/classes/grid.js",
+    "importStyle": "Grid",
+    "description": "The robot class contains all the functions and parameters specific to the grid",
+    "lineNumber": 12,
+    "interface": false
+  },
+  {
+    "kind": "constructor",
+    "static": false,
+    "variation": null,
+    "name": "constructor",
+    "memberof": "javascript/classes/grid.js~Grid",
+    "longname": "javascript/classes/grid.js~Grid#constructor",
+    "access": null,
+    "description": "Overrides default grid settings and bootstraps the module",
+    "lineNumber": 19,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Object"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "args",
+        "description": "overrides for the standard grid config"
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "el",
+    "memberof": "javascript/classes/grid.js~Grid",
+    "longname": "javascript/classes/grid.js~Grid#el",
+    "access": null,
+    "description": null,
+    "lineNumber": 23,
+    "type": {
+      "nullable": null,
+      "types": [
+        "HTMLElement"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "offsetX",
+    "memberof": "javascript/classes/grid.js~Grid",
+    "longname": "javascript/classes/grid.js~Grid#offsetX",
+    "access": null,
+    "description": null,
+    "lineNumber": 25,
+    "type": {
+      "nullable": null,
+      "types": [
+        "number"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "offsetY",
+    "memberof": "javascript/classes/grid.js~Grid",
+    "longname": "javascript/classes/grid.js~Grid#offsetY",
+    "access": null,
+    "description": null,
+    "lineNumber": 27,
+    "type": {
+      "nullable": null,
+      "types": [
+        "number"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "canvas",
+    "memberof": "javascript/classes/grid.js~Grid",
+    "longname": "javascript/classes/grid.js~Grid#canvas",
+    "access": null,
+    "description": null,
+    "lineNumber": 29,
+    "type": {
+      "nullable": null,
+      "types": [
+        "HTMLCanvasElement"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "ctx",
+    "memberof": "javascript/classes/grid.js~Grid",
+    "longname": "javascript/classes/grid.js~Grid#ctx",
+    "access": null,
+    "description": null,
+    "lineNumber": 31,
+    "type": {
+      "nullable": null,
+      "types": [
+        "CanvasRenderingContext2D"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "createCanvas",
+    "memberof": "javascript/classes/grid.js~Grid",
+    "longname": "javascript/classes/grid.js~Grid#createCanvas",
+    "access": null,
+    "description": "Builds the canvas element to a size inferred from the config",
+    "lineNumber": 37,
+    "params": [],
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "canvas",
+    "memberof": "javascript/classes/grid.js~Grid",
+    "longname": "javascript/classes/grid.js~Grid#canvas",
+    "access": null,
+    "description": null,
+    "lineNumber": 39,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "ctx",
+    "memberof": "javascript/classes/grid.js~Grid",
+    "longname": "javascript/classes/grid.js~Grid#ctx",
+    "access": null,
+    "description": null,
+    "lineNumber": 43,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "layout",
+    "memberof": "javascript/classes/grid.js~Grid",
+    "longname": "javascript/classes/grid.js~Grid#layout",
+    "access": null,
+    "description": "Lays out the canvas grid in rows and columns",
+    "lineNumber": 49,
+    "params": [],
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "draw",
+    "memberof": "javascript/classes/grid.js~Grid",
+    "longname": "javascript/classes/grid.js~Grid#draw",
+    "access": null,
+    "description": "Draws the rectangular grid on the canvas",
+    "lineNumber": 71,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "number"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "x",
+        "description": "the starting X coordinate"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "number"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "y",
+        "description": "the starting Y coordinate"
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "checkTouch",
+    "memberof": "javascript/classes/grid.js~Grid",
+    "longname": "javascript/classes/grid.js~Grid#checkTouch",
+    "access": null,
+    "description": "Ascertains whether the current event is a tap or a click",
+    "lineNumber": 84,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Event"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "event",
+        "description": "a click or touch event"
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    },
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "startRotate",
+    "memberof": "javascript/classes/grid.js~Grid",
+    "longname": "javascript/classes/grid.js~Grid#startRotate",
+    "access": null,
+    "description": "Instigates the rotation logic on mousedown",
+    "lineNumber": 92,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Event"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "event",
+        "description": "a mousedown or touchstart event"
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "stopRotate",
+    "memberof": "javascript/classes/grid.js~Grid",
+    "longname": "javascript/classes/grid.js~Grid#stopRotate",
+    "access": null,
+    "description": "Cancels the rotation logic on mouseup",
+    "lineNumber": 107,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Event"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "event",
+        "description": "a mouseup or touchend event"
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "rotate",
+    "memberof": "javascript/classes/grid.js~Grid",
+    "longname": "javascript/classes/grid.js~Grid#rotate",
+    "access": null,
+    "description": "Rotates the grid on mousemove",
+    "lineNumber": 122,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Event"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "event",
+        "description": "a mousemove or touchmove event"
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "offsetX",
+    "memberof": "javascript/classes/grid.js~Grid",
+    "longname": "javascript/classes/grid.js~Grid#offsetX",
+    "access": null,
+    "description": null,
+    "lineNumber": 128,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "offsetY",
+    "memberof": "javascript/classes/grid.js~Grid",
+    "longname": "javascript/classes/grid.js~Grid#offsetY",
+    "access": null,
+    "description": null,
+    "lineNumber": 129,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "clamp",
+    "memberof": "javascript/classes/grid.js~Grid",
+    "longname": "javascript/classes/grid.js~Grid#clamp",
+    "access": null,
+    "description": "Clamps a rotation value to a positive and negative\nminimum and maximum integer range",
+    "lineNumber": 146,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "number"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "value",
+        "description": "the value to clamp"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "number"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "max",
+        "description": "the maximum positive value"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "number"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "min",
+        "description": "the maximum negative value"
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    },
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "listen",
+    "memberof": "javascript/classes/grid.js~Grid",
+    "longname": "javascript/classes/grid.js~Grid#listen",
+    "access": null,
+    "description": "Rigs up the listeners for this class",
+    "lineNumber": 160,
+    "params": [],
+    "generator": false
+  },
+  {
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "javascript/classes/reporter.js",
+    "memberof": null,
+    "longname": "javascript/classes/reporter.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 4,
+    "content": "/**\r\n * The reporter class can report messages sent by other modules\r\n */\r\nexport default class Reporter {\r\n  \r\n  /**\r\n   * Constructor expects a HTMLElement string identifier\r\n   * @param {string} container - A HTMLElement identifier string\r\n   */\r\n  constructor(container = '')\r\n  {\r\n    try\r\n    {\r\n      /** @type {HTMLElement} */\r\n      this.container = document.querySelector(container);\r\n    }\r\n    catch(e)\r\n    {\r\n      throw new Error('No container was specified for the reporter');\r\n    }\r\n  }\r\n  \r\n  /**\r\n   * Intercepts a broadcasted event and reports it\r\n   * @param {Event} event - an event of type `broadcast:report`\r\n   */\r\n  report(event)\r\n  {\r\n    if (event.detail.coords) console.log(event.detail.coords);\r\n    this.listItem(event.detail.message);\r\n  }\r\n  \r\n  /**\r\n   * Creates a list item in the reporter's container\r\n   * @param {string} val - the list item's text\r\n   */\r\n  listItem(val)\r\n  {\r\n    let li = document.createElement('li');\r\n    li.innerHTML = val;\r\n    this.container.insertBefore(li, this.container.firstChild);\r\n  }\r\n  \r\n  /**\r\n   * Rigs the broadcast event listener for `broadcast:report` events\r\n   */\r\n  listen()\r\n  {\r\n    document.addEventListener('broadcast:report', this.report.bind(this));\r\n  }\r\n\r\n}"
+  },
+  {
+    "kind": "class",
+    "static": true,
+    "variation": null,
+    "name": "Reporter",
+    "memberof": "javascript/classes/reporter.js",
+    "longname": "javascript/classes/reporter.js~Reporter",
+    "access": null,
+    "export": true,
+    "importPath": "robot/javascript/classes/reporter.js",
+    "importStyle": "Reporter",
+    "description": "The reporter class can report messages sent by other modules",
+    "lineNumber": 4,
+    "interface": false
+  },
+  {
+    "kind": "constructor",
+    "static": false,
+    "variation": null,
+    "name": "constructor",
+    "memberof": "javascript/classes/reporter.js~Reporter",
+    "longname": "javascript/classes/reporter.js~Reporter#constructor",
+    "access": null,
+    "description": "Constructor expects a HTMLElement string identifier",
+    "lineNumber": 10,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "container",
+        "description": "A HTMLElement identifier string"
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "container",
+    "memberof": "javascript/classes/reporter.js~Reporter",
+    "longname": "javascript/classes/reporter.js~Reporter#container",
+    "access": null,
+    "description": null,
+    "lineNumber": 15,
+    "type": {
+      "nullable": null,
+      "types": [
+        "HTMLElement"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "report",
+    "memberof": "javascript/classes/reporter.js~Reporter",
+    "longname": "javascript/classes/reporter.js~Reporter#report",
+    "access": null,
+    "description": "Intercepts a broadcasted event and reports it",
+    "lineNumber": 27,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Event"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "event",
+        "description": "an event of type `broadcast:report`"
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "listItem",
+    "memberof": "javascript/classes/reporter.js~Reporter",
+    "longname": "javascript/classes/reporter.js~Reporter#listItem",
+    "access": null,
+    "description": "Creates a list item in the reporter's container",
+    "lineNumber": 37,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "val",
+        "description": "the list item's text"
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "listen",
+    "memberof": "javascript/classes/reporter.js~Reporter",
+    "longname": "javascript/classes/reporter.js~Reporter#listen",
+    "access": null,
+    "description": "Rigs the broadcast event listener for `broadcast:report` events",
+    "lineNumber": 47,
+    "params": [],
+    "generator": false
+  },
+  {
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "javascript/classes/robot.js",
+    "memberof": null,
+    "longname": "javascript/classes/robot.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 1,
+    "content": "import config from '../../config/config.json';\r\nimport Grid from './grid';\r\nimport ObjectAssign from 'object-assign';\r\n\r\nObject.freeze(config);\r\n\r\n/**\r\n * The robot class contains all the functions and parameters specific to the robot\r\n */\r\nexport default class Robot {\r\n  \r\n  /**\r\n   * Overrides default robot settings and bootstraps the module\r\n   * @param {Object} args - overrides for the standard robot config\r\n   */\r\n  constructor(args) {\r\n    ObjectAssign(this, config.robot, args);\r\n    /** @type {Grid} */\r\n    this.grid = undefined;\r\n    /** @type {boolean} */\r\n    this.placed = false;\r\n    /** @type {boolean} */\r\n    this.moving = false;\r\n    /** @type {HTMLElement} */\r\n    this.robot = null;\r\n    /** @type {Array} */\r\n    this.queue = [];\r\n  }\r\n  \r\n  /**\r\n   * Renders the robot in proximity to the grid element\r\n   */\r\n  render()\r\n  {\r\n    this.robot = document.createElement('div');\r\n    this.robot.style.width = this.robot.style.height = `${this.grid.size * 0.6}px`;\r\n    this.robot.style.margin = `${this.grid.size * 0.2}px`;\r\n    this.robot.id = 'robot';\r\n    this.grid.el.appendChild(this.robot);\r\n  }\r\n  \r\n  /**\r\n   * Manoeuvres the robot according to its current state\r\n   */\r\n  animate()\r\n  {\r\n    this.robot.style.transform = \r\n    this.robot.style.webkitTransform =\r\n    this.robot.style.mozTransform =\r\n    this.robot.style.msTransform =\r\n    this.robot.style.oTransform = `translate3d(${this.position.x * this.grid.size}px, -${this.position.y * this.grid.size}px, ${config.robot.hover}px) rotate(${this.position.a}deg)`;\r\n    \r\n    this.robot.setAttribute('data-heading', this.position.f.toLowerCase());\r\n  }\r\n  \r\n  /**\r\n   * Attaches the robot to the grid of choice\r\n   * @param {Grid} grid - the instantiated grid object\r\n   */\r\n  connectTo(grid)\r\n  {\r\n    if (!(grid instanceof Grid))\r\n    {\r\n      throw new Error('first argument must be a grid instance');\r\n    }\r\n    this.grid = grid;\r\n  }\r\n  \r\n  /**\r\n   * Validates X as a coordinate on the board\r\n   * @param {number} x - the desired new X coordinate\r\n   */\r\n  validateX(x)\r\n  {\r\n    return (typeof x === 'number' && x < this.grid.columns && x >= 0) ? true : false;\r\n  }\r\n  \r\n  /**\r\n   * Validates Y as a coordinate on the board\r\n   * @param {number} y - the desired new Y coordinate\r\n   */\r\n  validateY(y)\r\n  {\r\n    return (typeof y === 'number' && y < this.grid.rows && y >= 0) ? true : false;\r\n  }\r\n  \r\n  /**\r\n   * Validates F as a bearing reference contained in the config file\r\n   * @param {string} f - the uppercase compass direction\r\n   */\r\n  validateF(f)\r\n  {\r\n    return (typeof f === 'string' && typeof config.headings[f] === 'object') ? true : false;\r\n  }\r\n  \r\n  /**\r\n   * Places the robot at an arbitrary point on the board\r\n   * @param {number} x - the X coordinate of the location\r\n   * @param {number} y - the Y coordinate of the location\r\n   * @param {string} f - the compass heading of the location\r\n   */\r\n  place(X = 0, Y = 0, F = 'NORTH')\r\n  {\r\n    let x = parseInt(X);\r\n    let y = parseInt(Y);\r\n    let f = F.toUpperCase();\r\n    // X coordinate\r\n    this.position.x = (this.validateX(x)) ? x : config.robot.position.x;\r\n    // Y coordinate\r\n    this.position.y = (this.validateY(y)) ? y : config.robot.position.y;\r\n    // Heading\r\n    this.position.f = (this.validateF(f)) ? f : config.robot.position.f;\r\n    // Rotation\r\n    this.position.r = (this.validateF(f)) ? config.headings[f].r : config.headings[config.robot.position.f].r;\r\n    // Absolute rotation\r\n    this.position.a = (this.validateF(f)) ? config.headings[f].r : config.headings[config.robot.position.f].r;\r\n    \r\n    if (this.placed === false)\r\n    {\r\n      this.render();\r\n      this.placed = true;\r\n    }\r\n    \r\n    this.animate();\r\n  }\r\n  \r\n  /**\r\n   * Moves the robot according to its current heading\r\n   */\r\n  move()\r\n  {\r\n    if (this.placed === true)\r\n    {\r\n      let oldPosition = {};\r\n      let newPosition = config.headings[this.position.f];\r\n      \r\n      ObjectAssign(oldPosition, this.position);\r\n      \r\n      this.position.x = (this.validateX(this.position.x + newPosition.x)) ? (this.position.x + newPosition.x) : this.position.x;\r\n      this.position.y = (this.validateY(this.position.y + newPosition.y)) ? (this.position.y + newPosition.y) : this.position.y;\r\n      \r\n      if(oldPosition.x === this.position.x && oldPosition.y === this.position.y) {\r\n        this.broadcast('sound', this.sounds.error);\r\n      } else {\r\n        this.broadcast('sound', this.sounds.move);\r\n      }\r\n      \r\n      this.animate();\r\n    }\r\n    else\r\n    {\r\n      throw new Error(this.name + ' has not been placed.');\r\n    }\r\n  }\r\n  \r\n  /**\r\n   * Clamps rotation to positive integers between 0 and 360\r\n   * @param {number} val - any number\r\n   */\r\n  clampRotation(val)\r\n  {\r\n    if (val < 0) {\r\n      return (val + 360);\r\n    } else if (val >= 360) {\r\n      return (val - 360);\r\n    } else {\r\n      return val;\r\n    }\r\n  }\r\n  \r\n  /**\r\n   * Rotates the robot to a new heading\r\n   * @param {string} heading - either 'left' or 'right'\r\n   */\r\n  rotate(heading = 'right')\r\n  {\r\n    if (this.placed === true)\r\n    {\r\n      if (heading === 'left')\r\n      {\r\n        let newPos = this.position.r - config.increment;\r\n        this.position.a -= config.increment;\r\n        this.position.r = this.clampRotation(newPos);\r\n      }\r\n      else\r\n      {\r\n        let newPos = this.position.r + config.increment;\r\n        this.position.a += config.increment;\r\n        this.position.r = this.clampRotation(newPos);\r\n      }\r\n      \r\n      for (var key in config.headings) {\r\n        if (this.position.r === config.headings[key].r) {\r\n          this.position.f = key;\r\n        }\r\n      }\r\n      \r\n      this.animate();\r\n    }\r\n    else\r\n    {\r\n      throw new Error(this.name + ' has not been placed.');\r\n    }\r\n  }\r\n  \r\n  /**\r\n   * Proxy function to rotate from speech and text parser\r\n   */\r\n  left() {\r\n    this.rotate('left');\r\n  }\r\n  \r\n  /**\r\n   * Proxy function to rotate from speech and text parser\r\n   */\r\n  right() {\r\n    this.rotate('right');\r\n  }\r\n  \r\n  /**\r\n   * Announces the position and bearing of the robot\r\n   */\r\n  report()\r\n  {\r\n    let log = { coords : false, message : false };\r\n    \r\n    if (this.placed === true)\r\n    {\r\n      log.coords = {\r\n        X : this.position.x,\r\n        Y : this.position.y,\r\n        F : this.position.f\r\n      };\r\n      log.message = `${this.name} is at X${this.position.x}, Y${this.position.y} and facing ${this.position.f.toLowerCase()}`\r\n    }\r\n    else\r\n    {\r\n      log.coords = false;\r\n      log.message = `${this.name} is not yet on the board`;\r\n    }\r\n    \r\n    this.broadcast('report', log);\r\n  }\r\n  \r\n  /**\r\n   * Listens for arrow and space key events\r\n   * @param {string} type - the event type to broadcast (rendered as broadcast:type)\r\n   * @param {Object} detail - the detail object to send as an event argument\r\n   */\r\n  broadcast(type, detail)\r\n  {\r\n    let event = document.createEvent('CustomEvent');\r\n    event.initCustomEvent('broadcast:' + type, false, false, detail);\r\n    document.dispatchEvent(event);\r\n  }\r\n  \r\n  /**\r\n   * Handles keypresses from arrow, enter and space key listener\r\n   * @param {Event} event - the keydown event\r\n   */\r\n  handleKeypress(event)\r\n  {\r\n    let mapping = config.mappings[event.which];\r\n    \r\n    if (event.target.nodeName !== 'INPUT' && this.moving === false && mapping && typeof this[mapping.command] === 'function')\r\n    {\r\n      event.preventDefault();\r\n      let args = mapping.arguments || [];\r\n      this[mapping.command].apply(this, mapping.arguments);\r\n    }\r\n  }\r\n  \r\n  /**\r\n   * Handles clicks\r\n   * @param {Event} event - the click or touch event\r\n   */\r\n  handleClick(event)\r\n  {\r\n    if (event.target.getAttribute('data-action') && this.moving === false)\r\n    {\r\n      event.preventDefault();\r\n      event.stopPropagation();\r\n      \r\n      let command = event.target.getAttribute('data-action');\r\n      if (typeof this[command] === 'function')\r\n      {\r\n        this[command]();\r\n      }\r\n    }\r\n  }\r\n  \r\n  /**\r\n   * Registers commands that pertain to this robot instance\r\n   * from a list of configurable regular expressions\r\n   * @param {Event} event - the keydown event\r\n   */\r\n  registerCommands()\r\n  {\r\n    let self = this;\r\n    \r\n    let commands = config.commands.map(function(i)\r\n    {\r\n      let cmd = {\r\n        name : i.name,\r\n        command : new RegExp(i.command, 'i'),\r\n        action : function() {\r\n          self[i.action].apply(self, arguments);\r\n        }\r\n      }\r\n      \r\n      return cmd;\r\n    });\r\n    \r\n    return commands;\r\n  }\r\n  \r\n  /**\r\n   * Listens for arrow and space key events\r\n   */\r\n  listen()\r\n  {\r\n    document.addEventListener('keydown', this.handleKeypress.bind(this));\r\n    document.addEventListener('click', this.handleClick.bind(this));\r\n  }\r\n  \r\n}"
+  },
+  {
+    "kind": "class",
+    "static": true,
+    "variation": null,
+    "name": "Robot",
+    "memberof": "javascript/classes/robot.js",
+    "longname": "javascript/classes/robot.js~Robot",
+    "access": null,
+    "export": true,
+    "importPath": "robot/javascript/classes/robot.js",
+    "importStyle": "Robot",
+    "description": "The robot class contains all the functions and parameters specific to the robot",
+    "lineNumber": 10,
+    "interface": false
+  },
+  {
+    "kind": "constructor",
+    "static": false,
+    "variation": null,
+    "name": "constructor",
+    "memberof": "javascript/classes/robot.js~Robot",
+    "longname": "javascript/classes/robot.js~Robot#constructor",
+    "access": null,
+    "description": "Overrides default robot settings and bootstraps the module",
+    "lineNumber": 16,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Object"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "args",
+        "description": "overrides for the standard robot config"
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "grid",
+    "memberof": "javascript/classes/robot.js~Robot",
+    "longname": "javascript/classes/robot.js~Robot#grid",
+    "access": null,
+    "description": null,
+    "lineNumber": 19,
+    "type": {
+      "nullable": null,
+      "types": [
+        "Grid"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "placed",
+    "memberof": "javascript/classes/robot.js~Robot",
+    "longname": "javascript/classes/robot.js~Robot#placed",
+    "access": null,
+    "description": null,
+    "lineNumber": 21,
+    "type": {
+      "nullable": null,
+      "types": [
+        "boolean"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "moving",
+    "memberof": "javascript/classes/robot.js~Robot",
+    "longname": "javascript/classes/robot.js~Robot#moving",
+    "access": null,
+    "description": null,
+    "lineNumber": 23,
+    "type": {
+      "nullable": null,
+      "types": [
+        "boolean"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "robot",
+    "memberof": "javascript/classes/robot.js~Robot",
+    "longname": "javascript/classes/robot.js~Robot#robot",
+    "access": null,
+    "description": null,
+    "lineNumber": 25,
+    "type": {
+      "nullable": null,
+      "types": [
+        "HTMLElement"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "queue",
+    "memberof": "javascript/classes/robot.js~Robot",
+    "longname": "javascript/classes/robot.js~Robot#queue",
+    "access": null,
+    "description": null,
+    "lineNumber": 27,
+    "type": {
+      "nullable": null,
+      "types": [
+        "Array"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "render",
+    "memberof": "javascript/classes/robot.js~Robot",
+    "longname": "javascript/classes/robot.js~Robot#render",
+    "access": null,
+    "description": "Renders the robot in proximity to the grid element",
+    "lineNumber": 33,
+    "params": [],
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "robot",
+    "memberof": "javascript/classes/robot.js~Robot",
+    "longname": "javascript/classes/robot.js~Robot#robot",
+    "access": null,
+    "description": null,
+    "lineNumber": 35,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "animate",
+    "memberof": "javascript/classes/robot.js~Robot",
+    "longname": "javascript/classes/robot.js~Robot#animate",
+    "access": null,
+    "description": "Manoeuvres the robot according to its current state",
+    "lineNumber": 45,
+    "params": [],
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "connectTo",
+    "memberof": "javascript/classes/robot.js~Robot",
+    "longname": "javascript/classes/robot.js~Robot#connectTo",
+    "access": null,
+    "description": "Attaches the robot to the grid of choice",
+    "lineNumber": 60,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Grid"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "grid",
+        "description": "the instantiated grid object"
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "grid",
+    "memberof": "javascript/classes/robot.js~Robot",
+    "longname": "javascript/classes/robot.js~Robot#grid",
+    "access": null,
+    "description": null,
+    "lineNumber": 66,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "validateX",
+    "memberof": "javascript/classes/robot.js~Robot",
+    "longname": "javascript/classes/robot.js~Robot#validateX",
+    "access": null,
+    "description": "Validates X as a coordinate on the board",
+    "lineNumber": 73,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "number"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "x",
+        "description": "the desired new X coordinate"
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    },
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "validateY",
+    "memberof": "javascript/classes/robot.js~Robot",
+    "longname": "javascript/classes/robot.js~Robot#validateY",
+    "access": null,
+    "description": "Validates Y as a coordinate on the board",
+    "lineNumber": 82,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "number"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "y",
+        "description": "the desired new Y coordinate"
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    },
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "validateF",
+    "memberof": "javascript/classes/robot.js~Robot",
+    "longname": "javascript/classes/robot.js~Robot#validateF",
+    "access": null,
+    "description": "Validates F as a bearing reference contained in the config file",
+    "lineNumber": 91,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "f",
+        "description": "the uppercase compass direction"
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    },
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "place",
+    "memberof": "javascript/classes/robot.js~Robot",
+    "longname": "javascript/classes/robot.js~Robot#place",
+    "access": null,
+    "description": "Places the robot at an arbitrary point on the board",
+    "lineNumber": 102,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "number"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "x",
+        "description": "the X coordinate of the location"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "number"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "y",
+        "description": "the Y coordinate of the location"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "f",
+        "description": "the compass heading of the location"
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "placed",
+    "memberof": "javascript/classes/robot.js~Robot",
+    "longname": "javascript/classes/robot.js~Robot#placed",
+    "access": null,
+    "description": null,
+    "lineNumber": 121,
+    "undocument": true,
+    "type": {
+      "types": [
+        "boolean"
+      ]
+    }
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "move",
+    "memberof": "javascript/classes/robot.js~Robot",
+    "longname": "javascript/classes/robot.js~Robot#move",
+    "access": null,
+    "description": "Moves the robot according to its current heading",
+    "lineNumber": 130,
+    "params": [],
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "clampRotation",
+    "memberof": "javascript/classes/robot.js~Robot",
+    "longname": "javascript/classes/robot.js~Robot#clampRotation",
+    "access": null,
+    "description": "Clamps rotation to positive integers between 0 and 360",
+    "lineNumber": 160,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "number"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "val",
+        "description": "any number"
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    },
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "rotate",
+    "memberof": "javascript/classes/robot.js~Robot",
+    "longname": "javascript/classes/robot.js~Robot#rotate",
+    "access": null,
+    "description": "Rotates the robot to a new heading",
+    "lineNumber": 175,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "heading",
+        "description": "either 'left' or 'right'"
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "left",
+    "memberof": "javascript/classes/robot.js~Robot",
+    "longname": "javascript/classes/robot.js~Robot#left",
+    "access": null,
+    "description": "Proxy function to rotate from speech and text parser",
+    "lineNumber": 209,
+    "params": [],
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "right",
+    "memberof": "javascript/classes/robot.js~Robot",
+    "longname": "javascript/classes/robot.js~Robot#right",
+    "access": null,
+    "description": "Proxy function to rotate from speech and text parser",
+    "lineNumber": 216,
+    "params": [],
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "report",
+    "memberof": "javascript/classes/robot.js~Robot",
+    "longname": "javascript/classes/robot.js~Robot#report",
+    "access": null,
+    "description": "Announces the position and bearing of the robot",
+    "lineNumber": 223,
+    "params": [],
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "broadcast",
+    "memberof": "javascript/classes/robot.js~Robot",
+    "longname": "javascript/classes/robot.js~Robot#broadcast",
+    "access": null,
+    "description": "Listens for arrow and space key events",
+    "lineNumber": 250,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "type",
+        "description": "the event type to broadcast (rendered as broadcast:type)"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "Object"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "detail",
+        "description": "the detail object to send as an event argument"
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "handleKeypress",
+    "memberof": "javascript/classes/robot.js~Robot",
+    "longname": "javascript/classes/robot.js~Robot#handleKeypress",
+    "access": null,
+    "description": "Handles keypresses from arrow, enter and space key listener",
+    "lineNumber": 261,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Event"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "event",
+        "description": "the keydown event"
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "handleClick",
+    "memberof": "javascript/classes/robot.js~Robot",
+    "longname": "javascript/classes/robot.js~Robot#handleClick",
+    "access": null,
+    "description": "Handles clicks",
+    "lineNumber": 277,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Event"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "event",
+        "description": "the click or touch event"
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "registerCommands",
+    "memberof": "javascript/classes/robot.js~Robot",
+    "longname": "javascript/classes/robot.js~Robot#registerCommands",
+    "access": null,
+    "description": "Registers commands that pertain to this robot instance\nfrom a list of configurable regular expressions",
+    "lineNumber": 297,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Event"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "event",
+        "description": "the keydown event"
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    },
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "listen",
+    "memberof": "javascript/classes/robot.js~Robot",
+    "longname": "javascript/classes/robot.js~Robot#listen",
+    "access": null,
+    "description": "Listens for arrow and space key events",
+    "lineNumber": 320,
+    "params": [],
+    "generator": false
+  },
+  {
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "javascript/classes/sound-board.js",
+    "memberof": null,
+    "longname": "javascript/classes/sound-board.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 4,
+    "content": "/**\r\n * The soundboard addition plays sounds broadcast to it by other classes\r\n */\r\nexport default class SoundBoard {\r\n  \r\n  /**\r\n   * Bootstraps the class defaults\r\n   * @param {string} - a DOM string to use as a sound toggle\r\n   */\r\n  constructor(toggles)\r\n  {\r\n    /** @type {boolean} */\r\n    this.soundOn = true;\r\n    /** @type {HTMLElement} */\r\n    this.toggles = document.querySelector(toggles);\r\n    /** @type {Audio} */\r\n    this.audio = new Audio();\r\n  }\r\n  \r\n  /**\r\n   * The play function can be invoked from anywhere via\r\n   * a broadcast:sound event\r\n   * @param {Event} event - a broadcast event listener\r\n   */\r\n  play(event)\r\n  {\r\n    if (this.soundOn === true && event.detail !== this.audio.src.replace(window.location.href, ''))\r\n    {\r\n      this.audio.src = event.detail;\r\n      this.audio.play();\r\n    }\r\n  }\r\n  \r\n  /**\r\n   * Toggles whether any sound should play\r\n   */\r\n  toggleSound()\r\n  {\r\n    this.soundOn = (this.soundOn === true) ? false : true;\r\n  }\r\n  \r\n  /**\r\n   * Resets the src of the audio object\r\n   */\r\n  reset()\r\n  {\r\n    this.audio.src = '';\r\n  }\r\n  \r\n  /**\r\n   * Rigs up relevant event listeners\r\n   */\r\n  listen()\r\n  {\r\n    document.addEventListener('broadcast:sound', this.play.bind(this));\r\n    this.audio.addEventListener('ended', this.reset.bind(this));\r\n    if (this.toggles) this.toggles.addEventListener('click', this.toggleSound.bind(this));\r\n  }\r\n\r\n}"
+  },
+  {
+    "kind": "class",
+    "static": true,
+    "variation": null,
+    "name": "SoundBoard",
+    "memberof": "javascript/classes/sound-board.js",
+    "longname": "javascript/classes/sound-board.js~SoundBoard",
+    "access": null,
+    "export": true,
+    "importPath": "robot/javascript/classes/sound-board.js",
+    "importStyle": "SoundBoard",
+    "description": "The soundboard addition plays sounds broadcast to it by other classes",
+    "lineNumber": 4,
+    "interface": false
+  },
+  {
+    "kind": "constructor",
+    "static": false,
+    "variation": null,
+    "name": "constructor",
+    "memberof": "javascript/classes/sound-board.js~SoundBoard",
+    "longname": "javascript/classes/sound-board.js~SoundBoard#constructor",
+    "access": null,
+    "description": "Bootstraps the class defaults",
+    "lineNumber": 10,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "-",
+        "description": "a DOM string to use as a sound toggle"
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "soundOn",
+    "memberof": "javascript/classes/sound-board.js~SoundBoard",
+    "longname": "javascript/classes/sound-board.js~SoundBoard#soundOn",
+    "access": null,
+    "description": null,
+    "lineNumber": 13,
+    "type": {
+      "nullable": null,
+      "types": [
+        "boolean"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "toggles",
+    "memberof": "javascript/classes/sound-board.js~SoundBoard",
+    "longname": "javascript/classes/sound-board.js~SoundBoard#toggles",
+    "access": null,
+    "description": null,
+    "lineNumber": 15,
+    "type": {
+      "nullable": null,
+      "types": [
+        "HTMLElement"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "audio",
+    "memberof": "javascript/classes/sound-board.js~SoundBoard",
+    "longname": "javascript/classes/sound-board.js~SoundBoard#audio",
+    "access": null,
+    "description": null,
+    "lineNumber": 17,
+    "type": {
+      "nullable": null,
+      "types": [
+        "Audio"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "play",
+    "memberof": "javascript/classes/sound-board.js~SoundBoard",
+    "longname": "javascript/classes/sound-board.js~SoundBoard#play",
+    "access": null,
+    "description": "The play function can be invoked from anywhere via\na broadcast:sound event",
+    "lineNumber": 25,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Event"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "event",
+        "description": "a broadcast event listener"
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "toggleSound",
+    "memberof": "javascript/classes/sound-board.js~SoundBoard",
+    "longname": "javascript/classes/sound-board.js~SoundBoard#toggleSound",
+    "access": null,
+    "description": "Toggles whether any sound should play",
+    "lineNumber": 37,
+    "params": [],
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "soundOn",
+    "memberof": "javascript/classes/sound-board.js~SoundBoard",
+    "longname": "javascript/classes/sound-board.js~SoundBoard#soundOn",
+    "access": null,
+    "description": null,
+    "lineNumber": 39,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "reset",
+    "memberof": "javascript/classes/sound-board.js~SoundBoard",
+    "longname": "javascript/classes/sound-board.js~SoundBoard#reset",
+    "access": null,
+    "description": "Resets the src of the audio object",
+    "lineNumber": 45,
+    "params": [],
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "listen",
+    "memberof": "javascript/classes/sound-board.js~SoundBoard",
+    "longname": "javascript/classes/sound-board.js~SoundBoard#listen",
+    "access": null,
+    "description": "Rigs up relevant event listeners",
+    "lineNumber": 53,
+    "params": [],
+    "generator": false
+  },
+  {
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "javascript/classes/speech-parser.js",
+    "memberof": null,
+    "longname": "javascript/classes/speech-parser.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 1,
+    "content": "import config from '../../config/config.json';\r\nimport Mumble from 'mumble-js';\r\nimport Robot from './robot';\r\n\r\nObject.freeze(config);\r\n\r\n/**\r\n * The speech parser addition parses speech fed to it via the Web Speech API\r\n */\r\nexport default class SpeechParser\r\n{\r\n  \r\n  /**\r\n   * Bootstraps the class defaults\r\n   * @param {Robot} robot - an instantiated Robot class\r\n   */\r\n  constructor(robot)\r\n  {\r\n    if (!(robot instanceof Robot))\r\n    {\r\n      throw new Error('Parser needs to connect to an instantiated robot');\r\n    }\r\n    \r\n    /** @type {Robot} */\r\n    this.robot = robot;\r\n    \r\n    /** @type {Object} */\r\n    this.commands = this.robot.registerCommands();\r\n    \r\n    /** @type {Mumble} */\r\n    this.mumble = new Mumble({\r\n      language : config.language,\r\n      commands : this.commands\r\n    });\r\n  }\r\n  \r\n  /**\r\n   * Invokes Mumble's listening cycle\r\n   */\r\n  listen()\r\n  {\r\n    this.mumble.start();\r\n  }\r\n  \r\n}"
+  },
+  {
+    "kind": "class",
+    "static": true,
+    "variation": null,
+    "name": "SpeechParser",
+    "memberof": "javascript/classes/speech-parser.js",
+    "longname": "javascript/classes/speech-parser.js~SpeechParser",
+    "access": null,
+    "export": true,
+    "importPath": "robot/javascript/classes/speech-parser.js",
+    "importStyle": "SpeechParser",
+    "description": "The speech parser addition parses speech fed to it via the Web Speech API",
+    "lineNumber": 10,
+    "interface": false
+  },
+  {
+    "kind": "constructor",
+    "static": false,
+    "variation": null,
+    "name": "constructor",
+    "memberof": "javascript/classes/speech-parser.js~SpeechParser",
+    "longname": "javascript/classes/speech-parser.js~SpeechParser#constructor",
+    "access": null,
+    "description": "Bootstraps the class defaults",
+    "lineNumber": 17,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Robot"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "robot",
+        "description": "an instantiated Robot class"
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "robot",
+    "memberof": "javascript/classes/speech-parser.js~SpeechParser",
+    "longname": "javascript/classes/speech-parser.js~SpeechParser#robot",
+    "access": null,
+    "description": null,
+    "lineNumber": 25,
+    "type": {
+      "nullable": null,
+      "types": [
+        "Robot"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "commands",
+    "memberof": "javascript/classes/speech-parser.js~SpeechParser",
+    "longname": "javascript/classes/speech-parser.js~SpeechParser#commands",
+    "access": null,
+    "description": null,
+    "lineNumber": 28,
+    "type": {
+      "nullable": null,
+      "types": [
+        "Object"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "mumble",
+    "memberof": "javascript/classes/speech-parser.js~SpeechParser",
+    "longname": "javascript/classes/speech-parser.js~SpeechParser#mumble",
+    "access": null,
+    "description": null,
+    "lineNumber": 31,
+    "type": {
+      "nullable": null,
+      "types": [
+        "Mumble"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "listen",
+    "memberof": "javascript/classes/speech-parser.js~SpeechParser",
+    "longname": "javascript/classes/speech-parser.js~SpeechParser#listen",
+    "access": null,
+    "description": "Invokes Mumble's listening cycle",
+    "lineNumber": 40,
+    "params": [],
+    "generator": false
+  },
+  {
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "javascript/classes/text-parser.js",
+    "memberof": null,
+    "longname": "javascript/classes/text-parser.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 1,
+    "content": "import config from '../../config/config.json';\r\nimport Mumble from 'mumble-js';\r\nimport Robot from './robot';\r\n\r\nObject.freeze(config);\r\n\r\n/**\r\n * The text parser class adds the ability to translate a file to commands\r\n */\r\nexport default class TextParser\r\n{\r\n  \r\n  /**\r\n   * Bootstraps the text parser\r\n   * @param {Robot} robot - a Robot instance\r\n   */\r\n  constructor(robot)\r\n  {\r\n    if (!(robot instanceof Robot))\r\n    {\r\n      throw new Error('Parser needs to connect to an instantiated robot');\r\n    }\r\n    \r\n    /** @type {Robot} */\r\n    this.robot = robot;\r\n    /** @type {Object} */\r\n    this.commands = this.robot.registerCommands();\r\n    /** @type {Array} */\r\n    this.queue = [];\r\n    /** @type {boolean} */\r\n    this.parsing = false;\r\n    /** @type {number} */\r\n    this.interval = null;\r\n  }\r\n  \r\n  /**\r\n   * Invokes a digest cycle for the interpreter\r\n   */\r\n  digest() {\r\n    this.parsing = true;\r\n    this.interval = setInterval(this.tick.bind(this), config.digest);\r\n  }\r\n  \r\n  /**\r\n   * Reads the queue line for line or cancels if it reaches zero lines\r\n   */\r\n  tick() {\r\n    if (this.queue.length)\r\n    {\r\n      this.readLn.call(this, this.queue[0]);\r\n      this.queue.shift();\r\n    }\r\n    else\r\n    {\r\n      this.parsing = false;\r\n      clearInterval(this.interval);\r\n    }\r\n  }\r\n  \r\n  /**\r\n   * Allows manual clearing of the digest cycle\r\n   */\r\n  cancelDigest() {\r\n    clearInterval(this.interval);\r\n    this.interval = null;\r\n  }\r\n  \r\n  /**\r\n   * Reads a line and relates it to a command\r\n   * @param {string} ln - a parsable single line string\r\n   */\r\n  readLn(ln) {\r\n    let args = [];\r\n    \r\n    // Find the input command in the list of commands\r\n    let command = this.commands.filter(function(i)\r\n    {\r\n      let match = ln.trim().match(i.command);\r\n      if (match) args = match.slice(1, match.length);\r\n      return match;\r\n    });\r\n    \r\n    // Unfortunately we have to go imperative here as opposed to\r\n    // broadcasting an event as we need to know whether or not to\r\n    // clear an illegal text input queue on exception\r\n    try {\r\n      command[0].action.apply(self.robot, args);\r\n    } catch(e) {\r\n      this.queue = [];\r\n      throw new Error(e.message);\r\n    }\r\n  }\r\n  \r\n  /**\r\n   * Creates a queue from the lines of an input file\r\n   * and invokes the digest cycle\r\n   * @param {Event} event - a file API onload event\r\n   */\r\n  enqueue(event)\r\n  {\r\n    this.queue = this.queue.concat(event.target.result.trim().split('\\n'));\r\n    this.digest();\r\n  }\r\n  \r\n  /**\r\n   * Loads a file via the drag and drop and file APIs\r\n   * @param {Event} event - a drop event\r\n   */\r\n  loadFile(event)\r\n  {\r\n    event.stopPropagation();\r\n    event.preventDefault();\r\n    \r\n    if (this.parsing === false)\r\n    {\r\n      document.documentElement.removeAttribute('data-file');\r\n\r\n      let file = event.dataTransfer.files[0];\r\n      let reader = new FileReader();\r\n      \r\n      reader.onload = this.enqueue.bind(this);\r\n      reader.readAsText(file);\r\n    }\r\n  }\r\n  \r\n  /**\r\n   * Adds a dragged-over state to the document element\r\n   * @param {Event} event - a dragover event\r\n   */\r\n  addDropState(event)\r\n  {\r\n    event.stopPropagation();\r\n    event.preventDefault();\r\n    if (this.parsing === false) document.documentElement.setAttribute('data-file', '');\r\n  }\r\n  \r\n  /**\r\n   * Removes a dragged-over state from the document element\r\n   * @param {Event} event - a dragover event\r\n   */\r\n  removeDropState(event)\r\n  {\r\n    event.stopPropagation();\r\n    event.preventDefault();\r\n    if (this.parsing === false) document.documentElement.removeAttribute('data-file');\r\n  }\r\n  \r\n  /**\r\n   * Bootstraps event listeners\r\n   */\r\n  listen()\r\n  {\r\n    document.documentElement.addEventListener('dragover', this.addDropState.bind(this));\r\n    document.documentElement.addEventListener('dragend', this.removeDropState.bind(this));\r\n    document.documentElement.addEventListener('dragleave', this.removeDropState.bind(this));\r\n    document.documentElement.addEventListener('drop', this.loadFile.bind(this));\r\n  }\r\n  \r\n}"
+  },
+  {
+    "kind": "class",
+    "static": true,
+    "variation": null,
+    "name": "TextParser",
+    "memberof": "javascript/classes/text-parser.js",
+    "longname": "javascript/classes/text-parser.js~TextParser",
+    "access": null,
+    "export": true,
+    "importPath": "robot/javascript/classes/text-parser.js",
+    "importStyle": "TextParser",
+    "description": "The text parser class adds the ability to translate a file to commands",
+    "lineNumber": 10,
+    "interface": false
+  },
+  {
+    "kind": "constructor",
+    "static": false,
+    "variation": null,
+    "name": "constructor",
+    "memberof": "javascript/classes/text-parser.js~TextParser",
+    "longname": "javascript/classes/text-parser.js~TextParser#constructor",
+    "access": null,
+    "description": "Bootstraps the text parser",
+    "lineNumber": 17,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Robot"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "robot",
+        "description": "a Robot instance"
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "robot",
+    "memberof": "javascript/classes/text-parser.js~TextParser",
+    "longname": "javascript/classes/text-parser.js~TextParser#robot",
+    "access": null,
+    "description": null,
+    "lineNumber": 25,
+    "type": {
+      "nullable": null,
+      "types": [
+        "Robot"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "commands",
+    "memberof": "javascript/classes/text-parser.js~TextParser",
+    "longname": "javascript/classes/text-parser.js~TextParser#commands",
+    "access": null,
+    "description": null,
+    "lineNumber": 27,
+    "type": {
+      "nullable": null,
+      "types": [
+        "Object"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "queue",
+    "memberof": "javascript/classes/text-parser.js~TextParser",
+    "longname": "javascript/classes/text-parser.js~TextParser#queue",
+    "access": null,
+    "description": null,
+    "lineNumber": 29,
+    "type": {
+      "nullable": null,
+      "types": [
+        "Array"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "parsing",
+    "memberof": "javascript/classes/text-parser.js~TextParser",
+    "longname": "javascript/classes/text-parser.js~TextParser#parsing",
+    "access": null,
+    "description": null,
+    "lineNumber": 31,
+    "type": {
+      "nullable": null,
+      "types": [
+        "boolean"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "interval",
+    "memberof": "javascript/classes/text-parser.js~TextParser",
+    "longname": "javascript/classes/text-parser.js~TextParser#interval",
+    "access": null,
+    "description": null,
+    "lineNumber": 33,
+    "type": {
+      "nullable": null,
+      "types": [
+        "number"
+      ],
+      "spread": false,
+      "description": null
+    }
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "digest",
+    "memberof": "javascript/classes/text-parser.js~TextParser",
+    "longname": "javascript/classes/text-parser.js~TextParser#digest",
+    "access": null,
+    "description": "Invokes a digest cycle for the interpreter",
+    "lineNumber": 39,
+    "params": [],
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "parsing",
+    "memberof": "javascript/classes/text-parser.js~TextParser",
+    "longname": "javascript/classes/text-parser.js~TextParser#parsing",
+    "access": null,
+    "description": null,
+    "lineNumber": 40,
+    "undocument": true,
+    "type": {
+      "types": [
+        "boolean"
+      ]
+    }
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "interval",
+    "memberof": "javascript/classes/text-parser.js~TextParser",
+    "longname": "javascript/classes/text-parser.js~TextParser#interval",
+    "access": null,
+    "description": null,
+    "lineNumber": 41,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "tick",
+    "memberof": "javascript/classes/text-parser.js~TextParser",
+    "longname": "javascript/classes/text-parser.js~TextParser#tick",
+    "access": null,
+    "description": "Reads the queue line for line or cancels if it reaches zero lines",
+    "lineNumber": 47,
+    "params": [],
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "parsing",
+    "memberof": "javascript/classes/text-parser.js~TextParser",
+    "longname": "javascript/classes/text-parser.js~TextParser#parsing",
+    "access": null,
+    "description": null,
+    "lineNumber": 55,
+    "undocument": true,
+    "type": {
+      "types": [
+        "boolean"
+      ]
+    }
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "cancelDigest",
+    "memberof": "javascript/classes/text-parser.js~TextParser",
+    "longname": "javascript/classes/text-parser.js~TextParser#cancelDigest",
+    "access": null,
+    "description": "Allows manual clearing of the digest cycle",
+    "lineNumber": 63,
+    "params": [],
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "interval",
+    "memberof": "javascript/classes/text-parser.js~TextParser",
+    "longname": "javascript/classes/text-parser.js~TextParser#interval",
+    "access": null,
+    "description": null,
+    "lineNumber": 65,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "readLn",
+    "memberof": "javascript/classes/text-parser.js~TextParser",
+    "longname": "javascript/classes/text-parser.js~TextParser#readLn",
+    "access": null,
+    "description": "Reads a line and relates it to a command",
+    "lineNumber": 72,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "ln",
+        "description": "a parsable single line string"
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "queue",
+    "memberof": "javascript/classes/text-parser.js~TextParser",
+    "longname": "javascript/classes/text-parser.js~TextParser#queue",
+    "access": null,
+    "description": null,
+    "lineNumber": 89,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "enqueue",
+    "memberof": "javascript/classes/text-parser.js~TextParser",
+    "longname": "javascript/classes/text-parser.js~TextParser#enqueue",
+    "access": null,
+    "description": "Creates a queue from the lines of an input file\nand invokes the digest cycle",
+    "lineNumber": 99,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Event"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "event",
+        "description": "a file API onload event"
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "queue",
+    "memberof": "javascript/classes/text-parser.js~TextParser",
+    "longname": "javascript/classes/text-parser.js~TextParser#queue",
+    "access": null,
+    "description": null,
+    "lineNumber": 101,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "loadFile",
+    "memberof": "javascript/classes/text-parser.js~TextParser",
+    "longname": "javascript/classes/text-parser.js~TextParser#loadFile",
+    "access": null,
+    "description": "Loads a file via the drag and drop and file APIs",
+    "lineNumber": 109,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Event"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "event",
+        "description": "a drop event"
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "addDropState",
+    "memberof": "javascript/classes/text-parser.js~TextParser",
+    "longname": "javascript/classes/text-parser.js~TextParser#addDropState",
+    "access": null,
+    "description": "Adds a dragged-over state to the document element",
+    "lineNumber": 130,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Event"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "event",
+        "description": "a dragover event"
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "removeDropState",
+    "memberof": "javascript/classes/text-parser.js~TextParser",
+    "longname": "javascript/classes/text-parser.js~TextParser#removeDropState",
+    "access": null,
+    "description": "Removes a dragged-over state from the document element",
+    "lineNumber": 141,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Event"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "event",
+        "description": "a dragover event"
+      }
+    ],
+    "generator": false
+  },
+  {
+    "kind": "method",
+    "static": false,
+    "variation": null,
+    "name": "listen",
+    "memberof": "javascript/classes/text-parser.js~TextParser",
+    "longname": "javascript/classes/text-parser.js~TextParser#listen",
+    "access": null,
+    "description": "Bootstraps event listeners",
+    "lineNumber": 151,
+    "params": [],
+    "generator": false
+  },
+  {
+    "kind": "file",
+    "static": true,
+    "variation": null,
+    "name": "javascript/main.js",
+    "memberof": null,
+    "longname": "javascript/main.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 1,
+    "content": "import Grid from './classes/grid';\r\nimport Robot from './classes/robot';\r\nimport Reporter from './classes/reporter';\r\nimport SoundBoard from './classes/sound-board';\r\nimport TextParser from './classes/text-parser';\r\nimport SpeechParser from './classes/speech-parser';\r\nimport fastClick from 'fastclick';\r\n\r\nif (window.location.hostname.indexOf('github.io') > -1 && window.location.protocol !== 'https:')\r\n{\r\n  window.location.href = 'https:' + window.location.href.substring(window.location.protocol.length);\r\n}\r\n\r\nlet grid = new Grid({\r\n  container : '#board',\r\n  columns : 5,\r\n  rows : 5\r\n});\r\n\r\nlet robot = new Robot({\r\n  name : 'Roomba'\r\n});\r\n\r\nlet reporter = new Reporter('#report');\r\nlet soundBoard = new SoundBoard();\r\n\r\nlet textParser = new TextParser(robot);\r\nlet speechParser = new SpeechParser(robot);\r\n\r\ndocument.addEventListener('DOMContentLoaded', ()=> {\r\n  \r\n  fastClick.attach(document.body);\r\n  \r\n  grid.createCanvas();\r\n  grid.layout();\r\n  grid.listen();\r\n  \r\n  robot.connectTo(grid);\r\n  robot.listen();\r\n  \r\n  textParser.listen();\r\n  speechParser.listen();\r\n  \r\n  reporter.listen();\r\n  soundBoard.listen();\r\n  \r\n});"
+  },
+  {
+    "kind": "variable",
+    "static": true,
+    "variation": null,
+    "name": "grid",
+    "memberof": "javascript/main.js",
+    "longname": "javascript/main.js~grid",
+    "access": null,
+    "export": false,
+    "importPath": "robot/javascript/main.js",
+    "importStyle": null,
+    "description": null,
+    "lineNumber": 14,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "variable",
+    "static": true,
+    "variation": null,
+    "name": "robot",
+    "memberof": "javascript/main.js",
+    "longname": "javascript/main.js~robot",
+    "access": null,
+    "export": false,
+    "importPath": "robot/javascript/main.js",
+    "importStyle": null,
+    "description": null,
+    "lineNumber": 20,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "variable",
+    "static": true,
+    "variation": null,
+    "name": "reporter",
+    "memberof": "javascript/main.js",
+    "longname": "javascript/main.js~reporter",
+    "access": null,
+    "export": false,
+    "importPath": "robot/javascript/main.js",
+    "importStyle": null,
+    "description": null,
+    "lineNumber": 24,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "variable",
+    "static": true,
+    "variation": null,
+    "name": "soundBoard",
+    "memberof": "javascript/main.js",
+    "longname": "javascript/main.js~soundBoard",
+    "access": null,
+    "export": false,
+    "importPath": "robot/javascript/main.js",
+    "importStyle": null,
+    "description": null,
+    "lineNumber": 25,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "variable",
+    "static": true,
+    "variation": null,
+    "name": "textParser",
+    "memberof": "javascript/main.js",
+    "longname": "javascript/main.js~textParser",
+    "access": null,
+    "export": false,
+    "importPath": "robot/javascript/main.js",
+    "importStyle": null,
+    "description": null,
+    "lineNumber": 27,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "variable",
+    "static": true,
+    "variation": null,
+    "name": "speechParser",
+    "memberof": "javascript/main.js",
+    "longname": "javascript/main.js~speechParser",
+    "access": null,
+    "export": false,
+    "importPath": "robot/javascript/main.js",
+    "importStyle": null,
+    "description": null,
+    "lineNumber": 28,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Infinity",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Infinity",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Infinity",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "NaN",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/NaN",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~NaN",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "undefined",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/undefined",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~undefined",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "null",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/null",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~null",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Object",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Object",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "object",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~object",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Function",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Function",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "function",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~function",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Boolean",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Boolean",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "boolean",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~boolean",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Symbol",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Symbol",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Error",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Error",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "EvalError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/EvalError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~EvalError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "InternalError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/InternalError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~InternalError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "RangeError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RangeError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~RangeError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "ReferenceError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ReferenceError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~ReferenceError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "SyntaxError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SyntaxError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~SyntaxError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "TypeError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypeError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~TypeError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "URIError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/URIError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~URIError",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Number",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Number",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "number",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~number",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Date",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Date",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "String",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~String",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "string",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~string",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "RegExp",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~RegExp",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Int8Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Int8Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Int8Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Uint8Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Uint8Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Uint8ClampedArray",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8ClampedArray",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Uint8ClampedArray",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Int16Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Int16Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Int16Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Uint16Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint16Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Uint16Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Int32Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Int32Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Int32Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Uint32Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint32Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Uint32Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Float32Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float32Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Float32Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Float64Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float64Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Float64Array",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Map",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Map",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Set",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Set",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "WeakMap",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~WeakMap",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "WeakSet",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakSet",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~WeakSet",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "ArrayBuffer",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~ArrayBuffer",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "DataView",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~DataView",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "JSON",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~JSON",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Promise",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Promise",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Generator",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Generator",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "GeneratorFunction",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/GeneratorFunction",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~GeneratorFunction",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Reflect",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Reflect",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Proxy",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Proxy",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "CanvasRenderingContext2D",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~CanvasRenderingContext2D",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "DocumentFragment",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~DocumentFragment",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Element",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/Element",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~Element",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Event",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/Event",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~Event",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "Node",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/Node",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~Node",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "NodeList",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/NodeList",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~NodeList",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  },
+  {
+    "kind": "external",
+    "static": true,
+    "variation": null,
+    "name": "XMLHttpRequest",
+    "externalLink": "https://developer.mozilla.org/en/docs/Web/API/XMLHttpRequest",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "longname": "BuiltinExternal/WebAPIExternal.js~XMLHttpRequest",
+    "access": null,
+    "description": null,
+    "builtinExternal": true
+  }
+]

@@ -1,6 +1,5 @@
 node_modules
 build
-documentation
 .sass-cache
 .sass_cache
 .DS_STORE

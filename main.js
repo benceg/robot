@@ -162,11 +162,15 @@
 	      throw new Error('Parser needs to connect to an instantiated robot');
 	    }
 
+	    /** @type {Robot} */
 	    this.robot = robot;
+	    /** @type {Object} */
 	    this.commands = this.robot.registerCommands();
-
+	    /** @type {Array} */
 	    this.queue = [];
+	    /** @type {boolean} */
 	    this.parsing = false;
+	    /** @type {number} */
 	    this.interval = null;
 	  }
 
@@ -210,6 +214,7 @@
 
 	    /**
 	     * Reads a line and relates it to a command
+	     * @param {string} ln - a parsable single line string
 	     */
 	    value: function readLn(ln) {
 	      var args = [];
@@ -353,14 +358,15 @@
 	    _classCallCheck(this, Robot);
 
 	    (0, _objectAssign2['default'])(this, _configConfigJson2['default'].robot, args);
-
+	    /** @type {Grid} */
+	    this.grid = undefined;
 	    /** @type {boolean} */
 	    this.placed = false;
 	    /** @type {boolean} */
 	    this.moving = false;
-	    /** @type {node} */
+	    /** @type {HTMLElement} */
 	    this.robot = null;
-	    /** @type {array} */
+	    /** @type {Array} */
 	    this.queue = [];
 	  }
 
@@ -687,16 +693,23 @@
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 	/**
-	 * The reporter class
+	 * The reporter class can report messages sent by other modules
 	 */
 
 	var Reporter = (function () {
+
+	  /**
+	   * Constructor expects a HTMLElement string identifier
+	   * @param {string} container - A HTMLElement identifier string
+	   */
+
 	  function Reporter() {
 	    var container = arguments[0] === undefined ? '' : arguments[0];
 
 	    _classCallCheck(this, Reporter);
 
 	    try {
+	      /** @type {HTMLElement} */
 	      this.container = document.querySelector(container);
 	    } catch (e) {
 	      throw new Error('No container was specified for the reporter');
@@ -705,12 +718,22 @@
 
 	  _createClass(Reporter, [{
 	    key: 'report',
+
+	    /**
+	     * Intercepts a broadcasted event and reports it
+	     * @param {Event} event - an event of type `broadcast:report`
+	     */
 	    value: function report(event) {
 	      if (event.detail.coords) console.log(event.detail.coords);
 	      this.listItem(event.detail.message);
 	    }
 	  }, {
 	    key: 'listItem',
+
+	    /**
+	     * Creates a list item in the reporter's container
+	     * @param {string} val - the list item's text
+	     */
 	    value: function listItem(val) {
 	      var li = document.createElement('li');
 	      li.innerHTML = val;
@@ -718,6 +741,10 @@
 	    }
 	  }, {
 	    key: 'listen',
+
+	    /**
+	     * Rigs the broadcast event listener for `broadcast:report` events
+	     */
 	    value: function listen() {
 	      document.addEventListener('broadcast:report', this.report.bind(this));
 	    }
@@ -757,8 +784,11 @@
 	  function SoundBoard(toggles) {
 	    _classCallCheck(this, SoundBoard);
 
+	    /** @type {boolean} */
 	    this.soundOn = true;
+	    /** @type {HTMLElement} */
 	    this.toggles = document.querySelector(toggles);
+	    /** @type {Audio} */
 	    this.audio = new Audio();
 	  }
 
@@ -842,18 +872,39 @@
 	var startX = null;
 	var startY = null;
 
+	/**
+	 * The robot class contains all the functions and parameters specific to the grid
+	 */
+
 	var Grid = (function () {
+
+	  /**
+	   * Overrides default grid settings and bootstraps the module
+	   * @param {Object} args - overrides for the standard grid config
+	   */
+
 	  function Grid(args) {
 	    _classCallCheck(this, Grid);
 
 	    (0, _objectAssign2['default'])(this, _configConfigJson2['default'].grid, args);
+	    /** @type {HTMLElement} */
 	    this.el = document.querySelector(this.container);
+	    /** @type {number} */
 	    this.offsetX = 0;
+	    /** @type {number} */
 	    this.offsetY = 0;
+	    /** @type {HTMLCanvasElement} */
+	    this.canvas = undefined;
+	    /** @type {CanvasRenderingContext2D} */
+	    this.ctx = undefined;
 	  }
 
 	  _createClass(Grid, [{
 	    key: 'createCanvas',
+
+	    /**
+	     * Builds the canvas element to a size inferred from the config
+	     */
 	    value: function createCanvas() {
 	      this.canvas = document.createElement('canvas');
 	      this.el.appendChild(this.canvas);
@@ -863,6 +914,10 @@
 	    }
 	  }, {
 	    key: 'layout',
+
+	    /**
+	     * Lays out the canvas grid in rows and columns
+	     */
 	    value: function layout() {
 	      this.ctx.strokeStyle = this.lines.color;
 	      this.ctx.lineWidth = this.lines.width;
@@ -877,6 +932,12 @@
 	    }
 	  }, {
 	    key: 'draw',
+
+	    /**
+	     * Draws the rectangular grid on the canvas
+	     * @param {number} x - the starting X coordinate
+	     * @param {number} y - the starting Y coordinate
+	     */
 	    value: function draw(x, y) {
 	      var fromX = x * this.size + this.lines.width / 2;
 	      var fromY = y * this.size + this.lines.width / 2;
@@ -886,11 +947,21 @@
 	    }
 	  }, {
 	    key: 'checkTouch',
+
+	    /**
+	     * Ascertains whether the current event is a tap or a click
+	     * @param {Event} event - a click or touch event
+	     */
 	    value: function checkTouch(event) {
 	      return event.changedTouches ? event.changedTouches[0] : event;
 	    }
 	  }, {
 	    key: 'startRotate',
+
+	    /**
+	     * Instigates the rotation logic on mousedown
+	     * @param {Event} event - a mousedown or touchstart event
+	     */
 	    value: function startRotate(event) {
 	      if (event.target === this.canvas || event.target === this.canvas.parentNode) {
 	        event.preventDefault();
@@ -901,6 +972,11 @@
 	    }
 	  }, {
 	    key: 'stopRotate',
+
+	    /**
+	     * Cancels the rotation logic on mouseup
+	     * @param {Event} event - a mouseup or touchend event
+	     */
 	    value: function stopRotate(event) {
 	      if (startX !== null || startY !== null) {
 	        event.preventDefault();
@@ -911,6 +987,11 @@
 	    }
 	  }, {
 	    key: 'rotate',
+
+	    /**
+	     * Rotates the grid on mousemove
+	     * @param {Event} event - a mousemove or touchmove event
+	     */
 	    value: function rotate(event) {
 	      if (startX !== null && startY !== null) {
 	        event.preventDefault();
@@ -923,6 +1004,14 @@
 	    }
 	  }, {
 	    key: 'clamp',
+
+	    /**
+	     * Clamps a rotation value to a positive and negative
+	     * minimum and maximum integer range
+	     * @param {number} value - the value to clamp
+	     * @param {number} max - the maximum positive value
+	     * @param {number} min - the maximum negative value
+	     */
 	    value: function clamp(value) {
 	      var max = arguments[1] === undefined ? 60 : arguments[1];
 	      var min = arguments[2] === undefined ? 60 : arguments[2];
@@ -937,6 +1026,10 @@
 	    }
 	  }, {
 	    key: 'listen',
+
+	    /**
+	     * Rigs up the listeners for this class
+	     */
 	    value: function listen() {
 	      document.addEventListener('mousedown', this.startRotate.bind(this), true);
 	      document.addEventListener('mousemove', this.rotate.bind(this));
@@ -984,7 +1077,17 @@
 
 	Object.freeze(_configConfigJson2['default']);
 
+	/**
+	 * The speech parser addition parses speech fed to it via the Web Speech API
+	 */
+
 	var SpeechParser = (function () {
+
+	  /**
+	   * Bootstraps the class defaults
+	   * @param {Robot} robot - an instantiated Robot class
+	   */
+
 	  function SpeechParser(robot) {
 	    _classCallCheck(this, SpeechParser);
 
@@ -992,10 +1095,13 @@
 	      throw new Error('Parser needs to connect to an instantiated robot');
 	    }
 
+	    /** @type {Robot} */
 	    this.robot = robot;
 
+	    /** @type {Object} */
 	    this.commands = this.robot.registerCommands();
 
+	    /** @type {Mumble} */
 	    this.mumble = new _mumbleJs2['default']({
 	      language: _configConfigJson2['default'].language,
 	      commands: this.commands
@@ -1004,6 +1110,10 @@
 
 	  _createClass(SpeechParser, [{
 	    key: 'listen',
+
+	    /**
+	     * Invokes Mumble's listening cycle
+	     */
 	    value: function listen() {
 	      this.mumble.start();
 	    }
