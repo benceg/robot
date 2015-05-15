@@ -6,9 +6,9 @@ import TextParser from './classes/text-parser';
 import SpeechParser from './classes/speech-parser';
 import fastClick from 'fastclick';
 
-if (window.location.hostname.indexOf('github.io') > -1 && window.location. window.location.protocol != "https:")
+if (window.location.hostname.indexOf('github.io') > -1 && window.location.protocol !== 'https:')
 {
-  window.location.href = "https:" + window.location.href.substring(window.location.protocol.length);
+  window.location.href = 'https:' + window.location.href.substring(window.location.protocol.length);
 }
 
 let grid = new Grid({
@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', ()=> {
   robot.listen();
   
   textParser.listen();
-  // speechParser.listen();
+  speechParser.listen();
   
   reporter.listen();
   soundBoard.listen();
