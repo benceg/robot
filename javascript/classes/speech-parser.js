@@ -4,9 +4,16 @@ import Robot from './robot';
 
 Object.freeze(config);
 
+/**
+ * The speech parser addition parses speech fed to it via the Web Speech API
+ */
 export default class SpeechParser
 {
   
+  /**
+   * Bootstraps the class defaults
+   * @param {Robot} robot - an instantiated Robot class
+   */
   constructor(robot)
   {
     if (!(robot instanceof Robot))
@@ -24,6 +31,9 @@ export default class SpeechParser
     });
   }
   
+  /**
+   * Invokes Mumble's listening cycle
+   */
   listen()
   {
     this.mumble.start();

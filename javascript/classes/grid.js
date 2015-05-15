@@ -6,9 +6,16 @@ Object.freeze(config);
 var startX = null;
 var startY = null
 
+/**
+ * The robot class contains all the functions and parameters specific to the grid
+ */
 export default class Grid
 {
   
+  /**
+   * Overrides default grid settings and bootstraps the module
+   * @param {Object} args - overrides for the standard grid config
+   */
   constructor(args)
   {
     ObjectAssign(this, config.grid, args);
@@ -17,6 +24,9 @@ export default class Grid
     this.offsetY = 0;
   }
   
+  /**
+   * Builds the canvas element to a size inferred from the config
+   */
   createCanvas()
   {
     this.canvas = document.createElement('canvas');
@@ -26,6 +36,9 @@ export default class Grid
     this.ctx = this.canvas.getContext('2d');
   }
   
+  /**
+   * Lays out the canvas grid in rows and columns
+   */
   layout()
   {
     this.ctx.strokeStyle = this.lines.color;
@@ -43,6 +56,11 @@ export default class Grid
     }
   }
   
+  /**
+   * Draws the rectangular grid on the canvas
+   * @param {number} x - the starting X coordinate
+   * @param {number} y - the starting Y coordinate
+   */
   draw(x, y)
   {
     let fromX = x * this.size + this.lines.width / 2;
@@ -52,10 +70,18 @@ export default class Grid
     this.ctx.strokeRect(fromX, fromY, toX, toY);
   }
   
+  /**
+   * Ascertains whether the current event is a tap or a click
+   * @param {Event} event - a click or touch event
+   */
   checkTouch(event) {
     return (event.changedTouches) ? event.changedTouches[0] : event;
   }
   
+  /**
+   * Instigates the rotation logic on mousedown
+   * @param {Event} event - a mousedown or touchstart event
+   */
   startRotate(event)
   {
     if (event.target === this.canvas || event.target === this.canvas.parentNode)
@@ -67,6 +93,10 @@ export default class Grid
     }
   }
   
+  /**
+   * Cancels the rotation logic on mouseup
+   * @param {Event} event - a mouseup or touchend event
+   */
   stopRotate(event)
   {
     if (startX !== null || startY !== null)
@@ -78,6 +108,10 @@ export default class Grid
     }
   }
   
+  /**
+   * Rotates the grid on mousemove
+   * @param {Event} event - a mousemove or touchmove event
+   */
   rotate(event)
   {
     if(startX !== null && startY !== null)
@@ -95,6 +129,13 @@ export default class Grid
     }
   }
   
+  /**
+   * Clamps a rotation value to a positive and negative
+   * minimum and maximum integer range
+   * @param {number} value - the value to clamp
+   * @param {number} max - the maximum positive value
+   * @param {number} min - the maximum negative value
+   */
   clamp(value, max = 60, min = 60)
   {
     if (value > max) {
@@ -106,6 +147,9 @@ export default class Grid
     }
   }
   
+  /**
+   * Rigs up the listeners for this class
+   */
   listen()
   {
     document.addEventListener('mousedown', this.startRotate.bind(this), true);
