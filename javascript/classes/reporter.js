@@ -3,7 +3,7 @@
  */
 export default class Reporter {
   
-  constructor(container)
+  constructor(container = '')
   {
     try
     {
@@ -11,20 +11,13 @@ export default class Reporter {
     }
     catch(e)
     {
-      return console.error('No container was specified for the reporter');
+      throw new Error('No container was specified for the reporter');
     }
   }
   
   report(event)
   {
-    if (event.detail.coords)
-    {
-      console.log(event.detail.coords);
-    }
-    else
-    {
-      console.log(event.detail.message);
-    }
+    if (event.detail.coords) console.log(event.detail.coords);
     this.listItem(event.detail.message);
   }
   
@@ -37,7 +30,7 @@ export default class Reporter {
   
   listen()
   {
-    document.addEventListener('broadcast', this.report.bind(this));
+    document.addEventListener('broadcast:report', this.report.bind(this));
   }
 
 }

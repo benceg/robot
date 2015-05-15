@@ -2,21 +2,26 @@ doctype html
 html(lang="en")
   head
     meta(charset="utf-8")
-    meta(name="viewport", content="width=device-width, initial-scale=0.5")
+    meta(name="viewport", content="width=device-width, initial-scale=1, user-scalable=no")
     link(rel="stylesheet", href="main.css")
     link(rel="canonical", href="https://benceg.github.io/robot/")
   body
-    // input#text
+    
     .reporter
       ul#report
+        
     p#dropzone Drop your instructions here.
+    
     .wrapper.vertical
-      #board
+      .scaler
+        #board
+        
     .buttons
-      span(data-action="place") Place
-      span(data-action="move") Move
-      span(data-action="left") Left
-      span(data-action="right") Right
-      span(data-action="report") Report
+      span.icon-place(data-action="place") Place
+      span.icon-move(data-action="move") Move
+      span.icon-left(data-action="left") Left
+      span.icon-right(data-action="right") Right
+      span.icon-report(data-action="report") Report
+      
     script(src="main.js")
     script(src="http://localhost:3857/livereload.js")

@@ -5,7 +5,7 @@ import ObjectAssign from 'object-assign';
 Object.freeze(config);
 
 /**
- * The robot class
+ * The robot class contains all the functions and parameters specific to the robot
  */
 export default class Robot {
   
@@ -45,6 +45,10 @@ export default class Robot {
   {
     this.robot.style.transform = `translate3d(${this.position.x * this.grid.size}px, -${this.position.y * this.grid.size}px, ${config.robot.hover}px) rotate(${this.position.a}deg)`;
     this.robot.style.webkitTransform = `translate3d(${this.position.x * this.grid.size}px, -${this.position.y * this.grid.size}px, ${config.robot.hover}px) rotate(${this.position.a}deg)`;
+    this.robot.style.mozTransform = `translate3d(${this.position.x * this.grid.size}px, -${this.position.y * this.grid.size}px, ${config.robot.hover}px) rotate(${this.position.a}deg)`;
+    this.robot.style.msTransform = `translate3d(${this.position.x * this.grid.size}px, -${this.position.y * this.grid.size}px, ${config.robot.hover}px) rotate(${this.position.a}deg)`;
+    this.robot.style.oTransform = `translate3d(${this.position.x * this.grid.size}px, -${this.position.y * this.grid.size}px, ${config.robot.hover}px) rotate(${this.position.a}deg)`;
+    
     this.robot.setAttribute('data-heading', this.position.f.toLowerCase());
   }
   
@@ -54,7 +58,7 @@ export default class Robot {
    */
   connectTo(grid)
   {
-    if (grid instanceof Grid === false)
+    if (!(grid instanceof Grid))
     {
       throw new Error('first argument must be a grid instance');
     }
@@ -126,10 +130,19 @@ export default class Robot {
   {
     if (this.placed === true)
     {
+      let oldPosition = {};
       let newPosition = config.headings[this.position.f];
+      
+      ObjectAssign(oldPosition, this.position);
       
       this.position.x = (this.validateX(this.position.x + newPosition.x)) ? (this.position.x + newPosition.x) : this.position.x;
       this.position.y = (this.validateY(this.position.y + newPosition.y)) ? (this.position.y + newPosition.y) : this.position.y;
+      
+      if(oldPosition.x === this.position.x && oldPosition.y === this.position.y) {
+        this.broadcast('sound', this.sounds.error);
+      } else {
+        this.broadcast('sound', this.sounds.move);
+      }
       
       this.animate();
     }
@@ -140,32 +153,39 @@ export default class Robot {
   }
   
   /**
+   * Clamps rotation to positive integers between 0 and 360
+   * @param {number} val - any number
+   */
+  clampRotation(val)
+  {
+    if (val < 0) {
+      return (val + 360);
+    } else if (val >= 360) {
+      return (val - 360);
+    } else {
+      return val;
+    }
+  }
+  
+  /**
    * Rotates the robot to a new heading
    * @param {string} heading - either 'left' or 'right'
    */
-  rotate(heading)
+  rotate(heading = 'right')
   {
     if (this.placed === true)
     {
       if (heading === 'left')
       {
+        let newPos = this.position.r - config.increment;
         this.position.a -= config.increment;
-        this.position.r -= config.increment;
-        if (this.position.r < 0) {
-          this.position.r += 360;
-        } else if (this.position.r >= 360) {
-          this.position.r -= 360;
-        }
+        this.position.r = this.clampRotation(newPos);
       }
-      else if (heading === 'right')
+      else
       {
+        let newPos = this.position.r + config.increment;
         this.position.a += config.increment;
-        this.position.r += config.increment;
-        if (this.position.r < 0) {
-          this.position.r += 360;
-        } else if (this.position.r >= 360) {
-          this.position.r -= 360;
-        }
+        this.position.r = this.clampRotation(newPos);
       }
       
       for (var key in config.headings) {
@@ -218,17 +238,19 @@ export default class Robot {
       log.message = `${this.name} is not yet on the board`;
     }
     
-    let event = new CustomEvent('broadcast', { detail : log });
-    document.dispatchEvent(event);
+    this.broadcast('report', log);
   }
   
   /**
    * Listens for arrow and space key events
+   * @param {string} type - the event type to broadcast (rendered as broadcast:type)
+   * @param {Object} detail - the detail object to send as an event argument
    */
-  listen()
+  broadcast(type, detail)
   {
-    document.addEventListener('keydown', this.handleKeypress.bind(this));
-    document.addEventListener('click', this.handleClick.bind(this));
+    let event = document.createEvent('CustomEvent');
+    event.initCustomEvent('broadcast:' + type, false, false, detail);
+    document.dispatchEvent(event);
   }
   
   /**
@@ -268,6 +290,7 @@ export default class Robot {
   
   /**
    * Registers commands that pertain to this robot instance
+   * from a list of configurable regular expressions
    * @param {Event} event - the keydown event
    */
   registerCommands()
@@ -288,6 +311,15 @@ export default class Robot {
     });
     
     return commands;
+  }
+  
+  /**
+   * Listens for arrow and space key events
+   */
+  listen()
+  {
+    document.addEventListener('keydown', this.handleKeypress.bind(this));
+    document.addEventListener('click', this.handleClick.bind(this));
   }
   
 }

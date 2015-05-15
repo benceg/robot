@@ -28,8 +28,8 @@
     },
     "hover" : 7,
     "sounds" : {
-      "move" : "",
-      "rotate" : ""
+      "move" : "sounds/vacuum.mp3",
+      "error" : "sounds/nonono.mp3"
     }
   },
   

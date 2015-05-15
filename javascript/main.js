@@ -1,6 +1,7 @@
 import Grid from './classes/grid';
 import Robot from './classes/robot';
 import Reporter from './classes/reporter';
+import SoundBoard from './classes/sound-board';
 import TextParser from './classes/text-parser';
 import SpeechParser from './classes/speech-parser';
 import fastClick from 'fastclick';
@@ -16,6 +17,7 @@ let robot = new Robot({
 });
 
 let reporter = new Reporter('#report');
+let soundBoard = new SoundBoard();
 
 let textParser = new TextParser(robot);
 let speechParser = new SpeechParser(robot);
@@ -35,5 +37,6 @@ document.addEventListener('DOMContentLoaded', ()=> {
   // speechParser.listen();
   
   reporter.listen();
+  soundBoard.listen();
   
 });

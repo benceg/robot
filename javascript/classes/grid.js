@@ -21,7 +21,6 @@ export default class Grid
   {
     this.canvas = document.createElement('canvas');
     this.el.appendChild(this.canvas);
-    this.canvas.draggable = true;
     this.canvas.width = this.columns * this.size;
     this.canvas.height = this.rows * this.size;
     this.ctx = this.canvas.getContext('2d');
@@ -31,7 +30,7 @@ export default class Grid
   {
     this.ctx.strokeStyle = this.lines.color;
     this.ctx.lineWidth = this.lines.width;
-    if (!this.ctx || !this.ctx instanceof CanvasRenderingContext2D)
+    if (!this.ctx || !(this.ctx instanceof CanvasRenderingContext2D))
     {
       throw new Error('Grid.ctx is not a canvas element');
     }
@@ -59,7 +58,7 @@ export default class Grid
   
   startRotate(event)
   {
-    if (event.target === this.canvas)
+    if (event.target === this.canvas || event.target === this.canvas.parentNode)
     {
       event.preventDefault();
       startX = this.checkTouch(event).pageX - this.offsetX;
@@ -70,7 +69,7 @@ export default class Grid
   
   stopRotate(event)
   {
-    if (startX || startY)
+    if (startX !== null || startY !== null)
     {
       event.preventDefault();
       startX = null;
@@ -81,13 +80,16 @@ export default class Grid
   
   rotate(event)
   {
-    if(startX && startY)
+    if(startX !== null && startY !== null)
     {
       event.preventDefault();
       this.offsetX = this.clamp((this.checkTouch(event).pageX - startX), this.angle.x[0], this.angle.x[1]);
       this.offsetY = this.clamp((this.checkTouch(event).pageY - startY), this.angle.y[0], this.angle.y[1]);
       this.canvas.parentNode.style.transform = `perspective(1000px) rotateX(${this.offsetY}deg) rotateZ(${this.offsetX}deg)`;
       this.canvas.parentNode.style.webkitTransform = `perspective(1000px) rotateX(${this.offsetY}deg) rotateZ(${this.offsetX}deg)`;
+      this.canvas.parentNode.style.mozTransform = `perspective(1000px) rotateX(${this.offsetY}deg) rotateZ(${this.offsetX}deg)`;
+      this.canvas.parentNode.style.msTransform = `perspective(1000px) rotateX(${this.offsetY}deg) rotateZ(${this.offsetX}deg)`;
+      this.canvas.parentNode.style.oTransform = `perspective(1000px) rotateX(${this.offsetY}deg) rotateZ(${this.offsetX}deg)`;
     }
   }
   
@@ -104,7 +106,7 @@ export default class Grid
   
   listen()
   {
-    document.addEventListener('mousedown', this.startRotate.bind(this));
+    document.addEventListener('mousedown', this.startRotate.bind(this), true);
     document.addEventListener('mousemove', this.rotate.bind(this));
     document.addEventListener('mouseup', this.stopRotate.bind(this));
     

@@ -41,7 +41,7 @@ describe('Robot', ()=> {
       robot.position.x = 2;
       robot.position.y = 3;
       robot.animate();
-      expect(robot.robot.style.transform).toBe('translate3d(20px, -30px, 10px) rotate(0deg)');
+      expect(robot.robot.style.transform).toBe(`translate3d(20px, -30px, ${config.robot.hover}px) rotate(0deg)`);
     });
     
   });
@@ -205,35 +205,225 @@ describe('Robot', ()=> {
     });
     
   });
+
+  describe('clampRotation', ()=> {
+    
+    let robot = new Robot();
+    
+    it('constrains rotation to positive integer values between 0 and 360 degrees', ()=> {
+      expect(robot.clampRotation(450)).toBe(90);
+      expect(robot.clampRotation(-90)).toBe(270);
+      expect(robot.clampRotation(270)).toBe(270);
+    });
+    
+  });
   
   describe('rotate', ()=> {
+    
+    let robot = new Robot();
+    let grid = new Grid();
+    
+    robot.connectTo(grid);
+    
+    it('may not be invoked if the robot has not been placed', ()=> {
+      expect(function() { robot.rotate('left'); }).toThrow();
+    });
+    
+    it('can rotate the robot 90 degrees anticlockwise', ()=> {
+      robot.place();
+      robot.rotate('left');
+      expect(robot.position.r).toBe(270);
+    });
+    
+    it('should always reflect a positive integer value for degrees', ()=> {
+      robot.place();
+      robot.position.r = 450;
+      robot.rotate('left');
+      expect(robot.position.r).toBe(0);
+    });
+    
+    it('can rotate the robot 90 degrees clockwise', ()=> {
+      robot.place();
+      robot.rotate('right');
+      expect(robot.position.r).toBe(90);
+    });
+    
+    it('defaults to rotating right', ()=> {
+      robot.place();
+      robot.rotate();
+      expect(robot.position.r).toBe(90);
+    });
+    
+  });
+  
+  describe('left', ()=> {
+    
+    let robot = new Robot();
+    
+    it('should proxy to the rotate function with a `left` argument', ()=> {
+      spyOn(robot, 'rotate').and.stub();
+      robot.left();
+      expect(robot.rotate).toHaveBeenCalledWith('left');
+    });
+    
+  });
+  
+  describe('right', ()=> {
+    
+    let robot = new Robot();
+    
+    it('should proxy to the rotate function with a `right` argument', ()=> {
+      spyOn(robot, 'rotate').and.stub();
+      robot.right();
+      expect(robot.rotate).toHaveBeenCalledWith('right');
+    });
+    
+  });
+  
+  describe('report', ()=> {
+    
+    let robot = new Robot();
+    let grid = new Grid();
+    robot.connectTo(grid);
+    
+    beforeEach(()=> {
+      spyOn(robot, 'broadcast').and.stub();
+    });
+    
+    it('should send an invalidation message if the robot is not on the board', ()=> {
+      robot.report();
+      expect(robot.broadcast).toHaveBeenCalledWith('report', {
+        coords : false,
+        message : `${robot.name} is not yet on the board`
+      });
+    });
+    
+    it('should otherwise send its coordinates through with a message', ()=> {
+      robot.place();
+      robot.report();
+      expect(robot.broadcast).toHaveBeenCalledWith('report', {
+        coords : { X : robot.position.x, Y : robot.position.y, F : robot.position.f },
+        message : `${robot.name} is at X${robot.position.x}, Y${robot.position.y} and facing ${robot.position.f.toLowerCase()}`
+      });
+    });
+    
+  });
+  
+  describe('handleKeypress', ()=> {
+    
+    let robot = new Robot();
+    let grid = new Grid();
+    robot.connectTo(grid);
+    
+    let event = {
+      preventDefault : function() {},
+      target : { nodeName : 'LI' },
+      which : 32 // space = `place`
+    };
+    
+    beforeEach(()=> {
+      spyOn(robot, 'place').and.stub();
+    });
+    
+    it('should intercept a keypress and match it with a configured command', ()=> {
+      robot.handleKeypress(event);
+      expect(robot.place).toHaveBeenCalled();
+    });
+    
+    it('should not be fired if the keypress target is an input', ()=> {
+      event.target.nodeName = 'INPUT';
+      robot.handleKeypress(event);
+      expect(robot.place).not.toHaveBeenCalled();
+      event.target.nodeName = 'LI';
+    });
+    
+    it('should not be fired if the robot is already on the move', ()=> {
+      robot.moving = true;
+      robot.handleKeypress(event);
+      expect(robot.place).not.toHaveBeenCalled();
+      robot.moving = false;
+    });
+    
+    it('should not be fired if no mapping is found for the key', ()=> {
+      spyOn(event, 'preventDefault').and.stub();
+      event.which = 99;
+      robot.handleKeypress(event);
+      expect(event.preventDefault).not.toHaveBeenCalled();
+      event.which = 32;
+    });
+    
+  });
+  
+  describe('handleClick', ()=> {
+    
+    let robot = new Robot();
+    let grid = new Grid();
+    robot.connectTo(grid);
+    
+    let elem = document.createElement('a');
+    elem.setAttribute('data-action', 'place');
+    
+    let event = {
+      preventDefault : function() {},
+      stopPropagation : function() {},
+      target : elem
+    };
+    
+    beforeEach(()=> {
+      spyOn(robot, 'place').and.stub();
+    });
+    
+    it('should intercept a click and match it with a configured command', ()=> {
+      robot.handleClick(event);
+      expect(robot.place).toHaveBeenCalled();
+    });
+    
+    it('should not be fired if the robot is already on the move', ()=> {
+      robot.moving = true;
+      robot.handleClick(event);
+      expect(robot.place).not.toHaveBeenCalled();
+      robot.moving = false;
+    });
+    
+    it('should not be fired if no mapping is found for the data-action attribute', ()=> {
+      elem.setAttribute('data-action', 'test');
+      robot.handleClick(event);
+      expect(robot.place).not.toHaveBeenCalled();
+    });
+    
+    it('should not be fired if the click target does not have a data-action attribute', ()=> {
+      spyOn(event, 'preventDefault').and.stub();
+      elem.removeAttribute('data-action');
+      robot.handleClick(event);
+      expect(event.preventDefault).not.toHaveBeenCalled();
+    });
+    
+  });
+
+  describe('registerCommands', ()=> {
+    
+    let robot = new Robot();
+    let grid = new Grid();
+    robot.connectTo(grid);
+    
+    it('should cross-reference regex commands with their component functions', ()=> { 
+      let commands = robot.registerCommands();
+      expect(typeof commands).toBe('object');
+      
+      for(var i in commands) {
+        expect(()=> { commands[i].action(); }).not.toThrow();
+        expect(typeof commands[i].action).toBe('function');
+      }
+    });
     
   });
   
   describe('listen', ()=> {
     
-    let robot = new Robot('Test');    
+    let robot = new Robot();
     
-    it('should listen to movement events and change its position accordingly', ()=> {
-      spyOn(robot, 'move').and.stub();
-      //let event = new Event('move', { x : 0, y : 0 });
-      //document.dispatchEvent('move');
-      //expect(robot.move).toHaveBeenCalledWith({ x : 0, y : 0 });
-    });
-    
-    it('should listen to rotation events and change its heading accordingly', ()=> {
-      spyOn(robot, 'rotate').and.stub();
-      //let event = new Event('rotate', 90);
-      //document.dispatchEvent('rotate');
-      //expect(robot.move).toHaveBeenCalledWith({ x : 0, y : 0 });
-    });
-    
-  });
-  
-  describe('playSound', ()=> {
-    
-    it('should play a sound on movement and heading change', ()=> {
-      
+    it('should not throw', ()=> {
+      expect(()=> { robot.listen(); }).not.toThrow();
     });
     
   });

@@ -80,15 +80,6 @@ module.exports = function(grunt) {
       }
     },
     
-    copy : {
-      build : {
-        files : [
-          {expand: true, cwd: "src/images/", src: ["**"], dest: "build/images/"},
-          {expand: true, cwd: "src/fonts/", src: ["**"], dest: "build/fonts/"}
-        ]
-      }
-    },
-    
     jsdoc : {
       build : {
         src: ["src/javascript/*.js", "src/javascript/**/*.js", "README.md"], 
@@ -153,6 +144,11 @@ module.exports = function(grunt) {
         files : [
           {expand: true, cwd: "assets/fonts/", src: ["**"], dest: "build/fonts/"}
         ]
+      },
+      sounds : {
+        files : [
+          {expand: true, cwd: "assets/sounds/", src: ["**"], dest: "build/sounds/"}
+        ]
       }
     },
     
@@ -181,6 +177,10 @@ module.exports = function(grunt) {
         files : ["assets/fonts/**"],
         tasks : ["copy:fonts"]
       },
+      sounds : {
+        files : ["assets/sounds/**"],
+        tasks : ["copy:sounds"]
+      },
       stylesheets : {
         files : ["stylus/**"],
         tasks : ["stylus"]
@@ -195,7 +195,7 @@ module.exports = function(grunt) {
   
   grunt.registerTask("test", ["karma"]);
   grunt.registerTask("document", ["clean"], ["jsdoc"]);
-  grunt.registerTask("default", ["connect:dev", "copy:images", "copy:fonts", "jade", "stylus", "webpack", "watch"]);
-  grunt.registerTask("make", ["copy:images", "copy:fonts", "jade", "stylus", "csso", "webpack:build", "uglify"]);
+  grunt.registerTask("default", ["connect:dev", "copy:images", "copy:fonts", "copy:sounds", "jade", "stylus", "webpack", "watch"]);
+  grunt.registerTask("make", ["copy:images", "copy:fonts", "copy:sounds", "jade", "stylus", "csso", "webpack:build", "uglify"]);
 
 };

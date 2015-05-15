@@ -9,7 +9,7 @@ export default class SpeechParser
   
   constructor(robot)
   {
-    if (!robot instanceof Robot)
+    if (!(robot instanceof Robot))
     {
       throw new Error('Parser needs to connect to an instantiated robot');
     }

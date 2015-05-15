@@ -9,7 +9,7 @@ module.exports = function(config) {
     
     frameworks : ['jasmine'],
     
-    files : ['test/**/*.js'],
+    files : ['./node_modules/phantomjs-polyfill/bind-polyfill.js', 'test/**/*.js'],
     
     exclude : ['node_modules'],
     
