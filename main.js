@@ -52,25 +52,33 @@
 
 	var _classesGrid2 = _interopRequireDefault(_classesGrid);
 
-	var _classesRobot = __webpack_require__(4);
+	var _classesRobot = __webpack_require__(2);
 
 	var _classesRobot2 = _interopRequireDefault(_classesRobot);
 
-	var _classesReporter = __webpack_require__(7);
+	var _classesReporter = __webpack_require__(3);
 
 	var _classesReporter2 = _interopRequireDefault(_classesReporter);
+
+	var _classesSoundBoard = __webpack_require__(4);
+
+	var _classesSoundBoard2 = _interopRequireDefault(_classesSoundBoard);
 
 	var _classesTextParser = __webpack_require__(1);
 
 	var _classesTextParser2 = _interopRequireDefault(_classesTextParser);
 
-	var _classesSpeechParser = __webpack_require__(8);
+	var _classesSpeechParser = __webpack_require__(6);
 
 	var _classesSpeechParser2 = _interopRequireDefault(_classesSpeechParser);
 
-	var _fastclick = __webpack_require__(9);
+	var _fastclick = __webpack_require__(7);
 
 	var _fastclick2 = _interopRequireDefault(_fastclick);
+
+	if (window.location.hostname.indexOf('github.com') > -1 && window.location.window.location.protocol != 'https:') {
+	  window.location.href = 'https:' + window.location.href.substring(window.location.protocol.length);
+	}
 
 	var grid = new _classesGrid2['default']({
 	  container: '#board',
@@ -83,6 +91,7 @@
 	});
 
 	var reporter = new _classesReporter2['default']('#report');
+	var soundBoard = new _classesSoundBoard2['default']();
 
 	var textParser = new _classesTextParser2['default'](robot);
 	var speechParser = new _classesSpeechParser2['default'](robot);
@@ -102,6 +111,7 @@
 	  // speechParser.listen();
 
 	  reporter.listen();
+	  soundBoard.listen();
 	});
 
 /***/ },
@@ -120,65 +130,100 @@
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-	var _configConfigJson = __webpack_require__(2);
+	var _configConfigJson = __webpack_require__(9);
 
 	var _configConfigJson2 = _interopRequireDefault(_configConfigJson);
 
-	var _mumbleJs = __webpack_require__(3);
+	var _mumbleJs = __webpack_require__(10);
 
 	var _mumbleJs2 = _interopRequireDefault(_mumbleJs);
 
-	var _robot = __webpack_require__(4);
+	var _robot = __webpack_require__(2);
 
 	var _robot2 = _interopRequireDefault(_robot);
 
 	Object.freeze(_configConfigJson2['default']);
 
+	/**
+	 * The text parser class adds the ability to translate a file to commands
+	 */
+
 	var TextParser = (function () {
+
+	  /**
+	   * Bootstraps the text parser
+	   * @param {Robot} robot - a Robot instance
+	   */
+
 	  function TextParser(robot) {
 	    _classCallCheck(this, TextParser);
 
-	    if (!robot instanceof _robot2['default']) {
+	    if (!(robot instanceof _robot2['default'])) {
 	      throw new Error('Parser needs to connect to an instantiated robot');
 	    }
 
-	    this.queue = [];
-
 	    this.robot = robot;
-
 	    this.commands = this.robot.registerCommands();
 
-	    this.digesting = true;
-
-	    this.digest();
+	    this.queue = [];
+	    this.parsing = false;
+	    this.interval = null;
 	  }
 
 	  _createClass(TextParser, [{
 	    key: 'digest',
+
+	    /**
+	     * Invokes a digest cycle for the interpreter
+	     */
 	    value: function digest() {
-	      var self = this;
-	      setTimeout(function () {
-	        requestAnimationFrame(self.digest.bind(self));
-	        if (self.queue.length) {
-	          self.readLn.call(self, self.queue[0]);
-	          self.queue.shift();
-	        }
-	      }, _configConfigJson2['default'].digest);
+	      this.parsing = true;
+	      this.interval = setInterval(this.tick.bind(this), _configConfigJson2['default'].digest);
+	    }
+	  }, {
+	    key: 'tick',
+
+	    /**
+	     * Reads the queue line for line or cancels if it reaches zero lines
+	     */
+	    value: function tick() {
+	      if (this.queue.length) {
+	        this.readLn.call(this, this.queue[0]);
+	        this.queue.shift();
+	      } else {
+	        this.parsing = false;
+	        clearInterval(this.interval);
+	      }
 	    }
 	  }, {
 	    key: 'cancelDigest',
+
+	    /**
+	     * Allows manual clearing of the digest cycle
+	     */
 	    value: function cancelDigest() {
-	      this.digesting = false;
+	      clearInterval(this.interval);
+	      this.interval = null;
 	    }
 	  }, {
 	    key: 'readLn',
+
+	    /**
+	     * Reads a line and relates it to a command
+	     */
 	    value: function readLn(ln) {
 	      var args = [];
+
+	      // Find the input command in the list of commands
 	      var command = this.commands.filter(function (i) {
 	        var match = ln.trim().match(i.command);
 	        if (match) args = match.slice(1, match.length);
 	        return match;
 	      });
+
+	      // Unfortunately we have to go imperative here as opposed to
+	      // broadcasting an event as we need to know whether or not to
+	      // clear an illegal text input queue on exception
 	      try {
 	        command[0].action.apply(self.robot, args);
 	      } catch (e) {
@@ -188,39 +233,67 @@
 	    }
 	  }, {
 	    key: 'enqueue',
+
+	    /**
+	     * Creates a queue from the lines of an input file
+	     * and invokes the digest cycle
+	     * @param {Event} event - a file API onload event
+	     */
 	    value: function enqueue(event) {
 	      this.queue = this.queue.concat(event.target.result.trim().split('\n'));
+	      this.digest();
 	    }
 	  }, {
 	    key: 'loadFile',
+
+	    /**
+	     * Loads a file via the drag and drop and file APIs
+	     * @param {Event} event - a drop event
+	     */
 	    value: function loadFile(event) {
 	      event.stopPropagation();
 	      event.preventDefault();
 
-	      document.documentElement.removeAttribute('data-file');
+	      if (this.parsing === false) {
+	        document.documentElement.removeAttribute('data-file');
 
-	      var file = event.dataTransfer.files[0];
-	      var reader = new FileReader();
+	        var file = event.dataTransfer.files[0];
+	        var reader = new FileReader();
 
-	      reader.onload = this.enqueue.bind(this);
-	      reader.readAsText(file);
+	        reader.onload = this.enqueue.bind(this);
+	        reader.readAsText(file);
+	      }
 	    }
 	  }, {
 	    key: 'addDropState',
+
+	    /**
+	     * Adds a dragged-over state to the document element
+	     * @param {Event} event - a dragover event
+	     */
 	    value: function addDropState(event) {
 	      event.stopPropagation();
 	      event.preventDefault();
-	      document.documentElement.setAttribute('data-file', '');
+	      if (this.parsing === false) document.documentElement.setAttribute('data-file', '');
 	    }
 	  }, {
 	    key: 'removeDropState',
+
+	    /**
+	     * Removes a dragged-over state from the document element
+	     * @param {Event} event - a dragover event
+	     */
 	    value: function removeDropState(event) {
 	      event.stopPropagation();
 	      event.preventDefault();
-	      document.documentElement.removeAttribute('data-file');
+	      if (this.parsing === false) document.documentElement.removeAttribute('data-file');
 	    }
 	  }, {
 	    key: 'listen',
+
+	    /**
+	     * Bootstraps event listeners
+	     */
 	    value: function listen() {
 	      document.documentElement.addEventListener('dragover', this.addDropState.bind(this));
 	      document.documentElement.addEventListener('dragend', this.removeDropState.bind(this));
@@ -239,555 +312,6 @@
 /* 2 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = {
-		"language": "en-GB",
-		"digest": 1000,
-		"grid": {
-			"container": "body",
-			"rows": 5,
-			"columns": 5,
-			"size": 100,
-			"lines": {
-				"color": "rgba(0,0,0,0.3)",
-				"width": 3
-			},
-			"angle": {
-				"x": [
-					60,
-					60
-				],
-				"y": [
-					65,
-					0
-				]
-			}
-		},
-		"robot": {
-			"name": "Robot",
-			"speed": 1000,
-			"position": {
-				"x": 0,
-				"y": 0,
-				"f": "NORTH"
-			},
-			"hover": 7,
-			"sounds": {
-				"move": "",
-				"rotate": ""
-			}
-		},
-		"increment": 90,
-		"headings": {
-			"NORTH": {
-				"r": 0,
-				"x": 0,
-				"y": 1
-			},
-			"EAST": {
-				"r": 90,
-				"x": 1,
-				"y": 0
-			},
-			"SOUTH": {
-				"r": 180,
-				"x": 0,
-				"y": -1
-			},
-			"WEST": {
-				"r": 270,
-				"x": -1,
-				"y": 0
-			}
-		},
-		"mappings": {
-			"13": {
-				"command": "report"
-			},
-			"32": {
-				"command": "place"
-			},
-			"37": {
-				"command": "rotate",
-				"arguments": [
-					"left"
-				]
-			},
-			"38": {
-				"command": "move"
-			},
-			"39": {
-				"command": "rotate",
-				"arguments": [
-					"right"
-				]
-			}
-		},
-		"commands": [
-			{
-				"name": "place",
-				"command": "^place$",
-				"action": "place"
-			},
-			{
-				"name": "place_at",
-				"command": "^place X?([0-9]+)\\,?\\s?Y?([0-9]+)\\,?\\s?(North|East|South|West)$",
-				"action": "place"
-			},
-			{
-				"name": "move",
-				"command": "^move$",
-				"action": "move"
-			},
-			{
-				"name": "left",
-				"command": "^left$",
-				"action": "left"
-			},
-			{
-				"name": "right",
-				"command": "^right$",
-				"action": "right"
-			},
-			{
-				"name": "report",
-				"command": "^report$",
-				"action": "report"
-			}
-		]
-	}
-
-/***/ },
-/* 3 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/*!*
-	 * mumble.js v1.0.1
-	 * https://github.com/swemaniac/mumble
-	 *
-	 * A simple framework for adding voice commands to a web site using the web speech recognition API.
-	 * Supports the CommonJs/node.js/AMD and global syntax.
-	 *
-	 * See https://github.com/swemaniac/mumble for a readme and some examples.
-	 * Forked from and inspired by https://github.com/TalAter/annyang.
-	 */
-
-	/**
-	 * Definition of a speech callback.
-	 *
-	 * @callback SpeechCallback
-	 * @param {event} event The original event object.
-	 */
-
-	/**
-	 * Definition of a command object.
-	 *
-	 * @typedef {object} Command
-	 *
-	 * @property {string} name The command identifier.
-	 * @property {string|RegExp} command The command in regex form (can be string or object).
-	 * @property {function} action A callback that will be run when the command matches speech with the matched parameters.
-	 */
-
-	/**
-	 * Definition of an options object.
-	 *
-	 * @typedef {object} Options
-	 *
-	 * @property {string} [language=en-US] A 4-letter language code, e.g. en-US.
-	 * @property {boolean} [autoRestart=true] Whether to allow auto restarting the speech recognizer.
-	 * @property {boolean} [continuous] Whether the speech recognizer should act as a dictation device.
-	 * @property {integer} [maxAlternatives=5] The max number of alternative transcripts from the speech recognizer (defaults to 5).
-	 * @property {boolean} [debug=false] Whether to enable debug logging.
-	 * @property {Command[]} [commands] An array of commands, can also be added with addCommand().
-	 * @property {SpeechCallback[]} [callbacks] An object describing various callbacks to events (start, end, speech, recognizeMatch, recognizeNoMatch, error).
-	 */
-
-	(function(name, definition) {
-		if (true) module.exports = definition();
-		else if (typeof define == 'function' && typeof define.amd == 'object') define(definition);
-		else this[name] = definition();
-	}('Mumble',
-		/**
-		 * Module mumble.
-		 * @module mumble
-		 */
-		function() {
-			"use strict";
-
-			/**
-			 * Module entrypoint/constructor.
-			 *
-			 * @constructor
-			 * @alias module:mumble
-			 *
-			 * @param {Options} options An options object.
-			 */
-			var Mumble = function(options) {
-				var _recognizer = null;
-				var _startTime = 0;
-				var _aborted = false;
-				var _commands = [];
-
-				var _options = {
-					language: 'en-US',
-					autoRestart: true,
-					continuous: window.location.protocol === 'http:',
-					maxAlternatives: 5,
-					debug: false,
-
-					commands: [
-
-					],
-
-					callbacks: {
-						start: null,
-						end: null,
-						speech: null,
-						recognizeMatch: null,
-						recognizeNoMatch: null,
-						error: null
-					}
-				};
-
-				var _self = this;
-
-				/**
-				 * Call to start listening for speech.
-				 * @throws If the SpeechRecognition object wasn't supported.
-				 */
-				this.start = function() {
-					if (!this.isAvailable()) {
-						throw 'Speech recognition not supported in this browser';
-					}
-
-					_aborted = false;
-					_startTime = new Date().getTime();
-
-					_log('Starting with %d command(s) active', _commands.length);
-
-					_recognizer.start();
-				};
-
-				/**
-				 * Call to stop listening for speech.
-				 */
-				this.stop = function() {
-					if (this.isAvailable()) {
-						_aborted = true;
-						_recognizer.abort();
-					}
-				};
-
-				/**
-				 * Check if the SpeechRecognition object is supported.
-				 * @return {boolean}
-				 */
-				this.isAvailable = function() {
-					return !!_recognizer;
-				};
-
-				/**
-				 * Gets a reference to the SpeechRecognition object.
-				 * @return {SpeechRecognition}
-				 */
-				this.getSpeechRecognitionObject = function() {
-					return _recognizer;
-				};
-
-				/**
-				 * Adds a command.
-				 *
-				 * The command syntax can be a string with or without any regex instructions,
-				 * or a RegExp object. Either way it will be converted to a RegExp object with
-				 * the ignoreCase flag set.
-				 *
-				 * **Example**
-				 *
-				 * `addCommand('appointment', /^book (.+) for me (today|tomorrow) at (\d+)$/, function(appointment, date, hour) { })`
-				 *
-				 * @param {string} name A command identifier.
-				 * @param {string|RegExp} command The command in regex form (can be string or object).
-				 * @param {function} action A callback that will be run when the command matches speech.
-				 *
-				 * @throws If a command with the same name already exists.
-				 */
-				this.addCommand = function(name, command, action) {
-					if (this.getCommand(name)) {
-						throw 'Command "' + name + '"" already exists';
-					}
-
-					// wrap the command in a RegExp object with the ignoreCase flag
-					var commandSrc = typeof(command) == 'string' ? ('^' + command + '$') : command.source;
-					var commandExp = new RegExp(commandSrc, 'i');
-
-					_commands.push({
-						name: name,
-						command: commandExp,
-						action: action
-					});
-
-					_log('Added command: "%s", %s', name, commandExp);
-				};
-
-				/**
-				 * Removes a command.
-				 * @param {string} name The command identifier.
-				 */
-				this.removeCommand = function(name) {
-					var foundIndex = -1;
-
-					_commands.some(function(command, index) {
-						if (command.name == name) {
-							foundIndex = index;
-							return true;
-						}
-
-						return false;
-					});
-
-					if (foundIndex >= 0) {
-						delete _commands[foundIndex];
-						_log('Removed command "%s"', name);
-					}
-				};
-
-				/**
-				 * Gets a previously added command.
-				 *
-				 * @param {string} name A command identifier.
-				 * @return {Command} A command.
-				 */
-				this.getCommand = function(name) {
-					var found = null;
-
-					_commands.some(function(command) {
-						if (command.name == name) {
-							found = command;
-							return true;
-						}
-
-						return false;
-					});
-
-					return found;
-				};
-
-				/**
-				 * Sets the language of the speech recognizer.
-				 * @param {string} language A 4 letter language code (e.g. en-US).
-				 */
-				this.setLanguage = function(language) {
-					_options.language = language;
-
-					if (this.isAvailable()) {
-						_recognizer.lang = _options.language;
-					}
-				};
-
-				/**
-				 * Sets whether the speech recognizer should be auto restarted
-				 * after an "end" event.
-				 *
-				 * @param {boolean} autoRestart
-				 */
-				this.setAutoRestart = function(autoRestart) {
-					_options.autoRestart = !!autoRestart;
-				};
-
-				/**
-				 * Sets the max number of alternative transcripts that the
-				 * speech recognizer should return.
-				 *
-				 * Mumble will try to match a command to each of these transcripts.
-				 *
-				 * @param {integer} maxAlternatives
-				 */
-				this.setMaxAlternatives = function(maxAlternatives) {
-					_options.maxAlternatives = parseInt(maxAlternatives);
-
-					if (this.isAvailable()) {
-						_recognizer.maxAlternatives = _options.maxAlternatives;
-					}
-				};
-
-				/**
-				 * Sets whether the speech recognizer should act as a dictation device or
-				 * a one-shot command device.
-				 *
-				 * In HTTPS, turn off continuous mode for faster results.
-				 * In HTTP, turn on continuous mode for much slower results, but no repeating security notices.
-				 *
-				 * @param {boolean} continuous The mode of the speech recognizer.
-				 */
-				this.setContinuous = function(continuous) {
-					_options.continuous = !!continuous;
-
-					if (this.isAvailable()) {
-						_recognizer.continuous = _options.continuous;
-					}
-				};
-
-				/**
-				 * Enables or disabled debug logging to the console.
-				 * @param {boolean} debug
-				 */
-				this.setDebug = function(debug) {
-					_options.debug = !!debug;
-				};
-
-				function _init(options) {
-					_recognizer = _getRecognizerObject();
-
-					if (!_self.isAvailable()) {
-						return;
-					}
-
-					// merge default options with user options
-					if (options) {
-						for (var opt in _options) {
-							if (options[opt]) {
-								_options[opt] = options[opt];
-							}
-						}
-					}
-
-					_self.setLanguage(_options.language);
-					_self.setContinuous(_options.continuous);
-					_self.setAutoRestart(_options.autoRestart);
-					_self.setMaxAlternatives(_options.maxAlternatives);
-					_self.setDebug(_options.debug);
-
-					// add commands
-					_options.commands.forEach(function(command) {
-						_self.addCommand(command.name, command.command, command.action);
-					});
-
-					// set callbacks
-					_recognizer.onstart = _onStart;
-					_recognizer.onend = _onEnd;
-					_recognizer.onerror = _onError;
-					_recognizer.onresult = _onResult;
-				}
-
-				function _onStart(event) {
-					_log('Start listening..', event, _options);
-					_callback(_options.callbacks.start, event, _self);
-				}
-
-				function _onEnd(event) {
-					_log('Stop listening..', event);
-					_callback(_options.callbacks.end, event, _self);
-
-					if (_options.autoRestart && !_aborted) {
-						_log('(Auto-restarting)');
-
-						var timeSinceLastStarted = new Date().getTime() - _startTime;
-
-						// allow at least 1s between restarts
-						if (timeSinceLastStarted < 1000) {
-							setTimeout(_self.start, 1000 - timeSinceLastStarted);
-						} else {
-							_self.start();
-						}
-					}
-				}
-
-				function _onError(event) {
-					_log('Error occurred', event);
-					_callback(_options.callbacks.error, event, _self);
-
-					if (['not-allowed', 'service-not-allowed'].indexOf(event.error) !== -1) {
-						_self.setAutoRestart(false);
-					}
-				}
-
-				function _onResult(event) {
-					_log('Got result', event);
-					_callback(_options.callbacks.speech, event, _self);
-
-					var results = event.results[event.resultIndex];
-					var matchFound = false;
-
-					// loop through the transcription results
-					for (var i = 0; i < results.length; i++) {
-						var result = results[i];
-						var transcript = result.transcript.trim();
-
-						_log('Recognized: "%s"', transcript);
-
-						// check each command against the transcript, halting on the first match
-						matchFound = _commands.some(function(command) {
-							var match = command.command.exec(transcript);
-
-							// we got a match
-							if (match) {
-								var parameters = match.slice(1);
-
-								_log('Command matched: "%s", %s', command.name, command.command, parameters);
-
-								// call the generic callback and the command action with any possible parameters from the regex
-								_callback(_options.callbacks.recognizeMatch, event, _self);
-								command.action.apply(_self, parameters);
-
-								return true;
-							}
-
-							return false;
-						});
-
-						// don't go through the rest of the commands on a match
-						if (matchFound) {
-							break;
-						}
-					}
-
-					if (!matchFound) {
-						_callback(_options.callbacks.recognizeNoMatch, event, _self);
-					}
-
-					return matchFound;
-				}
-
-				function _callback(callback, event, context) {
-					if (typeof(callback) == 'function') {
-						callback.call(context, event);
-					}
-				}
-
-				function _getRecognizerObject() {
-					var SpeechRecognizer = window.SpeechRecognition ||
-										window.webkitSpeechRecognition ||
-										window.mozSpeechRecognition ||
-										window.msSpeechRecognition ||
-										window.oSpeechRecognition;
-
-					if (SpeechRecognizer) {
-						return new SpeechRecognizer();
-					}
-
-					_log('SpeechRecognition object not supported');
-
-					return null;
-				}
-
-				function _log() {
-					if (!!_options.debug) {
-						var out = window.console || { log: function() { } };
-						out.log.apply(out, arguments);
-					}
-				}
-
-				_init(options);
-			};
-
-			return Mumble;
-		}
-	));
-
-/***/ },
-/* 4 */
-/***/ function(module, exports, __webpack_require__) {
-
 	'use strict';
 
 	Object.defineProperty(exports, '__esModule', {
@@ -800,7 +324,7 @@
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-	var _configConfigJson = __webpack_require__(2);
+	var _configConfigJson = __webpack_require__(9);
 
 	var _configConfigJson2 = _interopRequireDefault(_configConfigJson);
 
@@ -808,14 +332,14 @@
 
 	var _grid2 = _interopRequireDefault(_grid);
 
-	var _objectAssign = __webpack_require__(6);
+	var _objectAssign = __webpack_require__(8);
 
 	var _objectAssign2 = _interopRequireDefault(_objectAssign);
 
 	Object.freeze(_configConfigJson2['default']);
 
 	/**
-	 * The robot class
+	 * The robot class contains all the functions and parameters specific to the robot
 	 */
 
 	var Robot = (function () {
@@ -860,8 +384,8 @@
 	     * Manoeuvres the robot according to its current state
 	     */
 	    value: function animate() {
-	      this.robot.style.transform = 'translate3d(' + this.position.x * this.grid.size + 'px, -' + this.position.y * this.grid.size + 'px, ' + _configConfigJson2['default'].robot.hover + 'px) rotate(' + this.position.a + 'deg)';
-	      this.robot.style.webkitTransform = 'translate3d(' + this.position.x * this.grid.size + 'px, -' + this.position.y * this.grid.size + 'px, ' + _configConfigJson2['default'].robot.hover + 'px) rotate(' + this.position.a + 'deg)';
+	      this.robot.style.transform = this.robot.style.webkitTransform = this.robot.style.mozTransform = this.robot.style.msTransform = this.robot.style.oTransform = 'translate3d(' + this.position.x * this.grid.size + 'px, -' + this.position.y * this.grid.size + 'px, ' + _configConfigJson2['default'].robot.hover + 'px) rotate(' + this.position.a + 'deg)';
+
 	      this.robot.setAttribute('data-heading', this.position.f.toLowerCase());
 	    }
 	  }, {
@@ -872,7 +396,7 @@
 	     * @param {Grid} grid - the instantiated grid object
 	     */
 	    value: function connectTo(grid) {
-	      if (grid instanceof _grid2['default'] === false) {
+	      if (!(grid instanceof _grid2['default'])) {
 	        throw new Error('first argument must be a grid instance');
 	      }
 	      this.grid = grid;
@@ -950,14 +474,39 @@
 	     */
 	    value: function move() {
 	      if (this.placed === true) {
+	        var oldPosition = {};
 	        var newPosition = _configConfigJson2['default'].headings[this.position.f];
+
+	        (0, _objectAssign2['default'])(oldPosition, this.position);
 
 	        this.position.x = this.validateX(this.position.x + newPosition.x) ? this.position.x + newPosition.x : this.position.x;
 	        this.position.y = this.validateY(this.position.y + newPosition.y) ? this.position.y + newPosition.y : this.position.y;
 
+	        if (oldPosition.x === this.position.x && oldPosition.y === this.position.y) {
+	          this.broadcast('sound', this.sounds.error);
+	        } else {
+	          this.broadcast('sound', this.sounds.move);
+	        }
+
 	        this.animate();
 	      } else {
 	        throw new Error(this.name + ' has not been placed.');
+	      }
+	    }
+	  }, {
+	    key: 'clampRotation',
+
+	    /**
+	     * Clamps rotation to positive integers between 0 and 360
+	     * @param {number} val - any number
+	     */
+	    value: function clampRotation(val) {
+	      if (val < 0) {
+	        return val + 360;
+	      } else if (val >= 360) {
+	        return val - 360;
+	      } else {
+	        return val;
 	      }
 	    }
 	  }, {
@@ -967,24 +516,18 @@
 	     * Rotates the robot to a new heading
 	     * @param {string} heading - either 'left' or 'right'
 	     */
-	    value: function rotate(heading) {
+	    value: function rotate() {
+	      var heading = arguments[0] === undefined ? 'right' : arguments[0];
+
 	      if (this.placed === true) {
 	        if (heading === 'left') {
+	          var newPos = this.position.r - _configConfigJson2['default'].increment;
 	          this.position.a -= _configConfigJson2['default'].increment;
-	          this.position.r -= _configConfigJson2['default'].increment;
-	          if (this.position.r < 0) {
-	            this.position.r += 360;
-	          } else if (this.position.r >= 360) {
-	            this.position.r -= 360;
-	          }
-	        } else if (heading === 'right') {
+	          this.position.r = this.clampRotation(newPos);
+	        } else {
+	          var newPos = this.position.r + _configConfigJson2['default'].increment;
 	          this.position.a += _configConfigJson2['default'].increment;
-	          this.position.r += _configConfigJson2['default'].increment;
-	          if (this.position.r < 0) {
-	            this.position.r += 360;
-	          } else if (this.position.r >= 360) {
-	            this.position.r -= 360;
-	          }
+	          this.position.r = this.clampRotation(newPos);
 	        }
 
 	        for (var key in _configConfigJson2['default'].headings) {
@@ -1037,18 +580,20 @@
 	        log.message = '' + this.name + ' is not yet on the board';
 	      }
 
-	      var event = new CustomEvent('broadcast', { detail: log });
-	      document.dispatchEvent(event);
+	      this.broadcast('report', log);
 	    }
 	  }, {
-	    key: 'listen',
+	    key: 'broadcast',
 
 	    /**
 	     * Listens for arrow and space key events
+	     * @param {string} type - the event type to broadcast (rendered as broadcast:type)
+	     * @param {Object} detail - the detail object to send as an event argument
 	     */
-	    value: function listen() {
-	      document.addEventListener('keydown', this.handleKeypress.bind(this));
-	      document.addEventListener('click', this.handleClick.bind(this));
+	    value: function broadcast(type, detail) {
+	      var event = document.createEvent('CustomEvent');
+	      event.initCustomEvent('broadcast:' + type, false, false, detail);
+	      document.dispatchEvent(event);
 	    }
 	  }, {
 	    key: 'handleKeypress',
@@ -1089,6 +634,7 @@
 
 	    /**
 	     * Registers commands that pertain to this robot instance
+	     * from a list of configurable regular expressions
 	     * @param {Event} event - the keydown event
 	     */
 	    value: function registerCommands() {
@@ -1108,12 +654,163 @@
 
 	      return commands;
 	    }
+	  }, {
+	    key: 'listen',
+
+	    /**
+	     * Listens for arrow and space key events
+	     */
+	    value: function listen() {
+	      document.addEventListener('keydown', this.handleKeypress.bind(this));
+	      document.addEventListener('click', this.handleClick.bind(this));
+	    }
 	  }]);
 
 	  return Robot;
 	})();
 
 	exports['default'] = Robot;
+	module.exports = exports['default'];
+
+/***/ },
+/* 3 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, '__esModule', {
+	  value: true
+	});
+
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+	/**
+	 * The reporter class
+	 */
+
+	var Reporter = (function () {
+	  function Reporter() {
+	    var container = arguments[0] === undefined ? '' : arguments[0];
+
+	    _classCallCheck(this, Reporter);
+
+	    try {
+	      this.container = document.querySelector(container);
+	    } catch (e) {
+	      throw new Error('No container was specified for the reporter');
+	    }
+	  }
+
+	  _createClass(Reporter, [{
+	    key: 'report',
+	    value: function report(event) {
+	      if (event.detail.coords) console.log(event.detail.coords);
+	      this.listItem(event.detail.message);
+	    }
+	  }, {
+	    key: 'listItem',
+	    value: function listItem(val) {
+	      var li = document.createElement('li');
+	      li.innerHTML = val;
+	      this.container.insertBefore(li, this.container.firstChild);
+	    }
+	  }, {
+	    key: 'listen',
+	    value: function listen() {
+	      document.addEventListener('broadcast:report', this.report.bind(this));
+	    }
+	  }]);
+
+	  return Reporter;
+	})();
+
+	exports['default'] = Reporter;
+	module.exports = exports['default'];
+
+/***/ },
+/* 4 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, '__esModule', {
+	  value: true
+	});
+
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+	/**
+	 * The soundboard addition plays sounds broadcast to it by other classes
+	 */
+
+	var SoundBoard = (function () {
+
+	  /**
+	   * Bootstraps the class defaults
+	   * @param {string} - a DOM string to use as a sound toggle
+	   */
+
+	  function SoundBoard(toggles) {
+	    _classCallCheck(this, SoundBoard);
+
+	    this.soundOn = true;
+	    this.toggles = document.querySelector(toggles);
+	    this.audio = new Audio();
+	  }
+
+	  _createClass(SoundBoard, [{
+	    key: 'play',
+
+	    /**
+	     * The play function can be invoked from anywhere via
+	     * a broadcast:sound event
+	     * @param {Event} event - a broadcast event listener
+	     */
+	    value: function play(event) {
+	      if (this.soundOn === true && event.detail !== this.audio.src.replace(window.location.href, '')) {
+	        this.audio.src = event.detail;
+	        this.audio.play();
+	      }
+	    }
+	  }, {
+	    key: 'toggleSound',
+
+	    /**
+	     * Toggles whether any sound should play
+	     */
+	    value: function toggleSound() {
+	      this.soundOn = this.soundOn === true ? false : true;
+	    }
+	  }, {
+	    key: 'reset',
+
+	    /**
+	     * Resets the src of the audio object
+	     */
+	    value: function reset() {
+	      this.audio.src = '';
+	    }
+	  }, {
+	    key: 'listen',
+
+	    /**
+	     * Rigs up relevant event listeners
+	     */
+	    value: function listen() {
+	      document.addEventListener('broadcast:sound', this.play.bind(this));
+	      this.audio.addEventListener('ended', this.reset.bind(this));
+	      if (this.toggles) this.toggles.addEventListener('click', this.toggleSound.bind(this));
+	    }
+	  }]);
+
+	  return SoundBoard;
+	})();
+
+	exports['default'] = SoundBoard;
 	module.exports = exports['default'];
 
 /***/ },
@@ -1132,11 +829,11 @@
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-	var _configConfigJson = __webpack_require__(2);
+	var _configConfigJson = __webpack_require__(9);
 
 	var _configConfigJson2 = _interopRequireDefault(_configConfigJson);
 
-	var _objectAssign = __webpack_require__(6);
+	var _objectAssign = __webpack_require__(8);
 
 	var _objectAssign2 = _interopRequireDefault(_objectAssign);
 
@@ -1160,7 +857,6 @@
 	    value: function createCanvas() {
 	      this.canvas = document.createElement('canvas');
 	      this.el.appendChild(this.canvas);
-	      this.canvas.draggable = true;
 	      this.canvas.width = this.columns * this.size;
 	      this.canvas.height = this.rows * this.size;
 	      this.ctx = this.canvas.getContext('2d');
@@ -1170,7 +866,7 @@
 	    value: function layout() {
 	      this.ctx.strokeStyle = this.lines.color;
 	      this.ctx.lineWidth = this.lines.width;
-	      if (!this.ctx || !this.ctx instanceof CanvasRenderingContext2D) {
+	      if (!this.ctx || !(this.ctx instanceof CanvasRenderingContext2D)) {
 	        throw new Error('Grid.ctx is not a canvas element');
 	      }
 	      for (var y = 0; y < this.rows; y++) {
@@ -1196,7 +892,7 @@
 	  }, {
 	    key: 'startRotate',
 	    value: function startRotate(event) {
-	      if (event.target === this.canvas) {
+	      if (event.target === this.canvas || event.target === this.canvas.parentNode) {
 	        event.preventDefault();
 	        startX = this.checkTouch(event).pageX - this.offsetX;
 	        startY = this.checkTouch(event).pageY - this.offsetY;
@@ -1206,7 +902,7 @@
 	  }, {
 	    key: 'stopRotate',
 	    value: function stopRotate(event) {
-	      if (startX || startY) {
+	      if (startX !== null || startY !== null) {
 	        event.preventDefault();
 	        startX = null;
 	        startY = null;
@@ -1216,12 +912,13 @@
 	  }, {
 	    key: 'rotate',
 	    value: function rotate(event) {
-	      if (startX && startY) {
+	      if (startX !== null && startY !== null) {
 	        event.preventDefault();
+
 	        this.offsetX = this.clamp(this.checkTouch(event).pageX - startX, this.angle.x[0], this.angle.x[1]);
 	        this.offsetY = this.clamp(this.checkTouch(event).pageY - startY, this.angle.y[0], this.angle.y[1]);
-	        this.canvas.parentNode.style.transform = 'perspective(1000px) rotateX(' + this.offsetY + 'deg) rotateZ(' + this.offsetX + 'deg)';
-	        this.canvas.parentNode.style.webkitTransform = 'perspective(1000px) rotateX(' + this.offsetY + 'deg) rotateZ(' + this.offsetX + 'deg)';
+
+	        this.canvas.parentNode.style.transform = this.canvas.parentNode.style.webkitTransform = this.canvas.parentNode.style.mozTransform = this.canvas.parentNode.style.msTransform = this.canvas.parentNode.style.oTransform = 'perspective(1000px) rotateX(' + this.offsetY + 'deg) rotateZ(' + this.offsetX + 'deg)';
 	      }
 	    }
 	  }, {
@@ -1241,7 +938,7 @@
 	  }, {
 	    key: 'listen',
 	    value: function listen() {
-	      document.addEventListener('mousedown', this.startRotate.bind(this));
+	      document.addEventListener('mousedown', this.startRotate.bind(this), true);
 	      document.addEventListener('mousemove', this.rotate.bind(this));
 	      document.addEventListener('mouseup', this.stopRotate.bind(this));
 
@@ -1263,97 +960,6 @@
 
 	'use strict';
 
-	function ToObject(val) {
-		if (val == null) {
-			throw new TypeError('Object.assign cannot be called with null or undefined');
-		}
-
-		return Object(val);
-	}
-
-	module.exports = Object.assign || function (target, source) {
-		var from;
-		var keys;
-		var to = ToObject(target);
-
-		for (var s = 1; s < arguments.length; s++) {
-			from = arguments[s];
-			keys = Object.keys(Object(from));
-
-			for (var i = 0; i < keys.length; i++) {
-				to[keys[i]] = from[keys[i]];
-			}
-		}
-
-		return to;
-	};
-
-
-/***/ },
-/* 7 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
-
-	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-
-	/**
-	 * The reporter class
-	 */
-
-	var Reporter = (function () {
-	  function Reporter(container) {
-	    _classCallCheck(this, Reporter);
-
-	    try {
-	      this.container = document.querySelector(container);
-	    } catch (e) {
-	      return console.error('No container was specified for the reporter');
-	    }
-	  }
-
-	  _createClass(Reporter, [{
-	    key: 'report',
-	    value: function report(event) {
-	      if (event.detail.coords) {
-	        console.log(event.detail.coords);
-	      } else {
-	        console.log(event.detail.message);
-	      }
-	      this.listItem(event.detail.message);
-	    }
-	  }, {
-	    key: 'listItem',
-	    value: function listItem(val) {
-	      var li = document.createElement('li');
-	      li.innerHTML = val;
-	      this.container.insertBefore(li, this.container.firstChild);
-	    }
-	  }, {
-	    key: 'listen',
-	    value: function listen() {
-	      document.addEventListener('broadcast', this.report.bind(this));
-	    }
-	  }]);
-
-	  return Reporter;
-	})();
-
-	exports['default'] = Reporter;
-	module.exports = exports['default'];
-
-/***/ },
-/* 8 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
 	Object.defineProperty(exports, '__esModule', {
 	  value: true
 	});
@@ -1364,15 +970,15 @@
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-	var _configConfigJson = __webpack_require__(2);
+	var _configConfigJson = __webpack_require__(9);
 
 	var _configConfigJson2 = _interopRequireDefault(_configConfigJson);
 
-	var _mumbleJs = __webpack_require__(3);
+	var _mumbleJs = __webpack_require__(10);
 
 	var _mumbleJs2 = _interopRequireDefault(_mumbleJs);
 
-	var _robot = __webpack_require__(4);
+	var _robot = __webpack_require__(2);
 
 	var _robot2 = _interopRequireDefault(_robot);
 
@@ -1382,7 +988,7 @@
 	  function SpeechParser(robot) {
 	    _classCallCheck(this, SpeechParser);
 
-	    if (!robot instanceof _robot2['default']) {
+	    if (!(robot instanceof _robot2['default'])) {
 	      throw new Error('Parser needs to connect to an instantiated robot');
 	    }
 
@@ -1410,7 +1016,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 9 */
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;;(function () {
@@ -2255,6 +1861,587 @@
 		}
 	}());
 
+
+/***/ },
+/* 8 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	function ToObject(val) {
+		if (val == null) {
+			throw new TypeError('Object.assign cannot be called with null or undefined');
+		}
+
+		return Object(val);
+	}
+
+	module.exports = Object.assign || function (target, source) {
+		var from;
+		var keys;
+		var to = ToObject(target);
+
+		for (var s = 1; s < arguments.length; s++) {
+			from = arguments[s];
+			keys = Object.keys(Object(from));
+
+			for (var i = 0; i < keys.length; i++) {
+				to[keys[i]] = from[keys[i]];
+			}
+		}
+
+		return to;
+	};
+
+
+/***/ },
+/* 9 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = {
+		"language": "en-GB",
+		"digest": 1000,
+		"grid": {
+			"container": "body",
+			"rows": 5,
+			"columns": 5,
+			"size": 100,
+			"lines": {
+				"color": "rgba(0,0,0,0.3)",
+				"width": 3
+			},
+			"angle": {
+				"x": [
+					60,
+					60
+				],
+				"y": [
+					65,
+					0
+				]
+			}
+		},
+		"robot": {
+			"name": "Robot",
+			"speed": 1000,
+			"position": {
+				"x": 0,
+				"y": 0,
+				"f": "NORTH"
+			},
+			"hover": 7,
+			"sounds": {
+				"move": "sounds/vacuum.mp3",
+				"error": "sounds/nonono.mp3"
+			}
+		},
+		"increment": 90,
+		"headings": {
+			"NORTH": {
+				"r": 0,
+				"x": 0,
+				"y": 1
+			},
+			"EAST": {
+				"r": 90,
+				"x": 1,
+				"y": 0
+			},
+			"SOUTH": {
+				"r": 180,
+				"x": 0,
+				"y": -1
+			},
+			"WEST": {
+				"r": 270,
+				"x": -1,
+				"y": 0
+			}
+		},
+		"mappings": {
+			"13": {
+				"command": "report"
+			},
+			"32": {
+				"command": "place"
+			},
+			"37": {
+				"command": "rotate",
+				"arguments": [
+					"left"
+				]
+			},
+			"38": {
+				"command": "move"
+			},
+			"39": {
+				"command": "rotate",
+				"arguments": [
+					"right"
+				]
+			}
+		},
+		"commands": [
+			{
+				"name": "place",
+				"command": "^place$",
+				"action": "place"
+			},
+			{
+				"name": "place_at",
+				"command": "^place X?([0-9]+)\\,?\\s?Y?([0-9]+)\\,?\\s?(North|East|South|West)$",
+				"action": "place"
+			},
+			{
+				"name": "move",
+				"command": "^move$",
+				"action": "move"
+			},
+			{
+				"name": "left",
+				"command": "^left$",
+				"action": "left"
+			},
+			{
+				"name": "right",
+				"command": "^right$",
+				"action": "right"
+			},
+			{
+				"name": "report",
+				"command": "^report$",
+				"action": "report"
+			}
+		]
+	}
+
+/***/ },
+/* 10 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/*!*
+	 * mumble.js v1.0.1
+	 * https://github.com/swemaniac/mumble
+	 *
+	 * A simple framework for adding voice commands to a web site using the web speech recognition API.
+	 * Supports the CommonJs/node.js/AMD and global syntax.
+	 *
+	 * See https://github.com/swemaniac/mumble for a readme and some examples.
+	 * Forked from and inspired by https://github.com/TalAter/annyang.
+	 */
+
+	/**
+	 * Definition of a speech callback.
+	 *
+	 * @callback SpeechCallback
+	 * @param {event} event The original event object.
+	 */
+
+	/**
+	 * Definition of a command object.
+	 *
+	 * @typedef {object} Command
+	 *
+	 * @property {string} name The command identifier.
+	 * @property {string|RegExp} command The command in regex form (can be string or object).
+	 * @property {function} action A callback that will be run when the command matches speech with the matched parameters.
+	 */
+
+	/**
+	 * Definition of an options object.
+	 *
+	 * @typedef {object} Options
+	 *
+	 * @property {string} [language=en-US] A 4-letter language code, e.g. en-US.
+	 * @property {boolean} [autoRestart=true] Whether to allow auto restarting the speech recognizer.
+	 * @property {boolean} [continuous] Whether the speech recognizer should act as a dictation device.
+	 * @property {integer} [maxAlternatives=5] The max number of alternative transcripts from the speech recognizer (defaults to 5).
+	 * @property {boolean} [debug=false] Whether to enable debug logging.
+	 * @property {Command[]} [commands] An array of commands, can also be added with addCommand().
+	 * @property {SpeechCallback[]} [callbacks] An object describing various callbacks to events (start, end, speech, recognizeMatch, recognizeNoMatch, error).
+	 */
+
+	(function(name, definition) {
+		if (true) module.exports = definition();
+		else if (typeof define == 'function' && typeof define.amd == 'object') define(definition);
+		else this[name] = definition();
+	}('Mumble',
+		/**
+		 * Module mumble.
+		 * @module mumble
+		 */
+		function() {
+			"use strict";
+
+			/**
+			 * Module entrypoint/constructor.
+			 *
+			 * @constructor
+			 * @alias module:mumble
+			 *
+			 * @param {Options} options An options object.
+			 */
+			var Mumble = function(options) {
+				var _recognizer = null;
+				var _startTime = 0;
+				var _aborted = false;
+				var _commands = [];
+
+				var _options = {
+					language: 'en-US',
+					autoRestart: true,
+					continuous: window.location.protocol === 'http:',
+					maxAlternatives: 5,
+					debug: false,
+
+					commands: [
+
+					],
+
+					callbacks: {
+						start: null,
+						end: null,
+						speech: null,
+						recognizeMatch: null,
+						recognizeNoMatch: null,
+						error: null
+					}
+				};
+
+				var _self = this;
+
+				/**
+				 * Call to start listening for speech.
+				 * @throws If the SpeechRecognition object wasn't supported.
+				 */
+				this.start = function() {
+					if (!this.isAvailable()) {
+						throw 'Speech recognition not supported in this browser';
+					}
+
+					_aborted = false;
+					_startTime = new Date().getTime();
+
+					_log('Starting with %d command(s) active', _commands.length);
+
+					_recognizer.start();
+				};
+
+				/**
+				 * Call to stop listening for speech.
+				 */
+				this.stop = function() {
+					if (this.isAvailable()) {
+						_aborted = true;
+						_recognizer.abort();
+					}
+				};
+
+				/**
+				 * Check if the SpeechRecognition object is supported.
+				 * @return {boolean}
+				 */
+				this.isAvailable = function() {
+					return !!_recognizer;
+				};
+
+				/**
+				 * Gets a reference to the SpeechRecognition object.
+				 * @return {SpeechRecognition}
+				 */
+				this.getSpeechRecognitionObject = function() {
+					return _recognizer;
+				};
+
+				/**
+				 * Adds a command.
+				 *
+				 * The command syntax can be a string with or without any regex instructions,
+				 * or a RegExp object. Either way it will be converted to a RegExp object with
+				 * the ignoreCase flag set.
+				 *
+				 * **Example**
+				 *
+				 * `addCommand('appointment', /^book (.+) for me (today|tomorrow) at (\d+)$/, function(appointment, date, hour) { })`
+				 *
+				 * @param {string} name A command identifier.
+				 * @param {string|RegExp} command The command in regex form (can be string or object).
+				 * @param {function} action A callback that will be run when the command matches speech.
+				 *
+				 * @throws If a command with the same name already exists.
+				 */
+				this.addCommand = function(name, command, action) {
+					if (this.getCommand(name)) {
+						throw 'Command "' + name + '"" already exists';
+					}
+
+					// wrap the command in a RegExp object with the ignoreCase flag
+					var commandSrc = typeof(command) == 'string' ? ('^' + command + '$') : command.source;
+					var commandExp = new RegExp(commandSrc, 'i');
+
+					_commands.push({
+						name: name,
+						command: commandExp,
+						action: action
+					});
+
+					_log('Added command: "%s", %s', name, commandExp);
+				};
+
+				/**
+				 * Removes a command.
+				 * @param {string} name The command identifier.
+				 */
+				this.removeCommand = function(name) {
+					var foundIndex = -1;
+
+					_commands.some(function(command, index) {
+						if (command.name == name) {
+							foundIndex = index;
+							return true;
+						}
+
+						return false;
+					});
+
+					if (foundIndex >= 0) {
+						delete _commands[foundIndex];
+						_log('Removed command "%s"', name);
+					}
+				};
+
+				/**
+				 * Gets a previously added command.
+				 *
+				 * @param {string} name A command identifier.
+				 * @return {Command} A command.
+				 */
+				this.getCommand = function(name) {
+					var found = null;
+
+					_commands.some(function(command) {
+						if (command.name == name) {
+							found = command;
+							return true;
+						}
+
+						return false;
+					});
+
+					return found;
+				};
+
+				/**
+				 * Sets the language of the speech recognizer.
+				 * @param {string} language A 4 letter language code (e.g. en-US).
+				 */
+				this.setLanguage = function(language) {
+					_options.language = language;
+
+					if (this.isAvailable()) {
+						_recognizer.lang = _options.language;
+					}
+				};
+
+				/**
+				 * Sets whether the speech recognizer should be auto restarted
+				 * after an "end" event.
+				 *
+				 * @param {boolean} autoRestart
+				 */
+				this.setAutoRestart = function(autoRestart) {
+					_options.autoRestart = !!autoRestart;
+				};
+
+				/**
+				 * Sets the max number of alternative transcripts that the
+				 * speech recognizer should return.
+				 *
+				 * Mumble will try to match a command to each of these transcripts.
+				 *
+				 * @param {integer} maxAlternatives
+				 */
+				this.setMaxAlternatives = function(maxAlternatives) {
+					_options.maxAlternatives = parseInt(maxAlternatives);
+
+					if (this.isAvailable()) {
+						_recognizer.maxAlternatives = _options.maxAlternatives;
+					}
+				};
+
+				/**
+				 * Sets whether the speech recognizer should act as a dictation device or
+				 * a one-shot command device.
+				 *
+				 * In HTTPS, turn off continuous mode for faster results.
+				 * In HTTP, turn on continuous mode for much slower results, but no repeating security notices.
+				 *
+				 * @param {boolean} continuous The mode of the speech recognizer.
+				 */
+				this.setContinuous = function(continuous) {
+					_options.continuous = !!continuous;
+
+					if (this.isAvailable()) {
+						_recognizer.continuous = _options.continuous;
+					}
+				};
+
+				/**
+				 * Enables or disabled debug logging to the console.
+				 * @param {boolean} debug
+				 */
+				this.setDebug = function(debug) {
+					_options.debug = !!debug;
+				};
+
+				function _init(options) {
+					_recognizer = _getRecognizerObject();
+
+					if (!_self.isAvailable()) {
+						return;
+					}
+
+					// merge default options with user options
+					if (options) {
+						for (var opt in _options) {
+							if (options[opt]) {
+								_options[opt] = options[opt];
+							}
+						}
+					}
+
+					_self.setLanguage(_options.language);
+					_self.setContinuous(_options.continuous);
+					_self.setAutoRestart(_options.autoRestart);
+					_self.setMaxAlternatives(_options.maxAlternatives);
+					_self.setDebug(_options.debug);
+
+					// add commands
+					_options.commands.forEach(function(command) {
+						_self.addCommand(command.name, command.command, command.action);
+					});
+
+					// set callbacks
+					_recognizer.onstart = _onStart;
+					_recognizer.onend = _onEnd;
+					_recognizer.onerror = _onError;
+					_recognizer.onresult = _onResult;
+				}
+
+				function _onStart(event) {
+					_log('Start listening..', event, _options);
+					_callback(_options.callbacks.start, event, _self);
+				}
+
+				function _onEnd(event) {
+					_log('Stop listening..', event);
+					_callback(_options.callbacks.end, event, _self);
+
+					if (_options.autoRestart && !_aborted) {
+						_log('(Auto-restarting)');
+
+						var timeSinceLastStarted = new Date().getTime() - _startTime;
+
+						// allow at least 1s between restarts
+						if (timeSinceLastStarted < 1000) {
+							setTimeout(_self.start, 1000 - timeSinceLastStarted);
+						} else {
+							_self.start();
+						}
+					}
+				}
+
+				function _onError(event) {
+					_log('Error occurred', event);
+					_callback(_options.callbacks.error, event, _self);
+
+					if (['not-allowed', 'service-not-allowed'].indexOf(event.error) !== -1) {
+						_self.setAutoRestart(false);
+					}
+				}
+
+				function _onResult(event) {
+					_log('Got result', event);
+					_callback(_options.callbacks.speech, event, _self);
+
+					var results = event.results[event.resultIndex];
+					var matchFound = false;
+
+					// loop through the transcription results
+					for (var i = 0; i < results.length; i++) {
+						var result = results[i];
+						var transcript = result.transcript.trim();
+
+						_log('Recognized: "%s"', transcript);
+
+						// check each command against the transcript, halting on the first match
+						matchFound = _commands.some(function(command) {
+							var match = command.command.exec(transcript);
+
+							// we got a match
+							if (match) {
+								var parameters = match.slice(1);
+
+								_log('Command matched: "%s", %s', command.name, command.command, parameters);
+
+								// call the generic callback and the command action with any possible parameters from the regex
+								_callback(_options.callbacks.recognizeMatch, event, _self);
+								command.action.apply(_self, parameters);
+
+								return true;
+							}
+
+							return false;
+						});
+
+						// don't go through the rest of the commands on a match
+						if (matchFound) {
+							break;
+						}
+					}
+
+					if (!matchFound) {
+						_callback(_options.callbacks.recognizeNoMatch, event, _self);
+					}
+
+					return matchFound;
+				}
+
+				function _callback(callback, event, context) {
+					if (typeof(callback) == 'function') {
+						callback.call(context, event);
+					}
+				}
+
+				function _getRecognizerObject() {
+					var SpeechRecognizer = window.SpeechRecognition ||
+										window.webkitSpeechRecognition ||
+										window.mozSpeechRecognition ||
+										window.msSpeechRecognition ||
+										window.oSpeechRecognition;
+
+					if (SpeechRecognizer) {
+						return new SpeechRecognizer();
+					}
+
+					_log('SpeechRecognition object not supported');
+
+					return null;
+				}
+
+				function _log() {
+					if (!!_options.debug) {
+						var out = window.console || { log: function() { } };
+						out.log.apply(out, arguments);
+					}
+				}
+
+				_init(options);
+			};
+
+			return Mumble;
+		}
+	));
 
 /***/ }
 /******/ ]);

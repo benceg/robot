@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for javascript\classes\grid.js</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="../../prettify.css">
+    <link rel="stylesheet" href="../../base.css">
+    <style type='text/css'>
+        div.coverage-summary .sorter {
+            background-image: url(../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class="header medium">
+    <h1>Code coverage report for <span class="entity">javascript\classes\grid.js</span></h1>
+    <h2>
+        Statements: <span class="metric">66.27% <small>(55 / 83)</small></span> &nbsp;&nbsp;&nbsp;&nbsp;
+        Branches: <span class="metric">44.74% <small>(17 / 38)</small></span> &nbsp;&nbsp;&nbsp;&nbsp;
+        Functions: <span class="metric">62.5% <small>(10 / 16)</small></span> &nbsp;&nbsp;&nbsp;&nbsp;
+        Lines: <span class="metric">45.1% <small>(23 / 51)</small></span> &nbsp;&nbsp;&nbsp;&nbsp;
+        Ignored: <span class="metric">4 statements, 5 branches</span> &nbsp;&nbsp;&nbsp;&nbsp;
+    </h2>
+    <div class="path"><a href="../../index.html">All files</a> &#187; <a href="index.html">javascript/classes/</a> &#187; grid.js</div>
+</div>
+<div class="body">
+<pre><table class="coverage">
+<tr><td class="line-count">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113</td><td class="line-coverage"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4</span>
+<span class="cline-any cline-yes">4</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">11</span>
+<span class="cline-any cline-yes">11</span>
+<span class="cline-any cline-yes">11</span>
+<span class="cline-any cline-yes">11</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">25</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">25</span>
+<span class="cline-any cline-yes">25</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import config from '../../config/config.json';
+import ObjectAssign from 'object-assign';
+&nbsp;
+Object.freeze(config);
+&nbsp;
+var startX = null;
+var startY = null
+&nbsp;
+export default class Grid
+{
+  
+  constructor(args)
+  {
+    ObjectAssign(this, config.grid, args);
+    this.el = document.querySelector(this.container);
+    this.offsetX = 0;
+    this.offsetY = 0;
+  }
+  
+  layout()
+  {
+    this.ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+    this.ctx.lineWidth = 10;
+    <span class="missing-if-branch" title="if path not taken" >I</span>if (!this.ctx || !this.ctx instanceof CanvasRenderingContext2D)
+    {
+<span class="cstat-no" title="statement not covered" >      throw new Error('Grid.ctx is not a canvas element');</span>
+    }
+    for (let y = 0; y &lt; this.rows; y++)
+    {
+      for (let x = 0; x &lt; this.columns; x++)
+      {
+        this.draw(x, y);
+      }
+    }
+  }
+  
+  createCanvas()
+  {
+    this.canvas = document.createElement('canvas');
+    this.el.appendChild(this.canvas);
+    this.canvas.draggable = true;
+    this.canvas.width = this.columns * this.size;
+    this.canvas.height = this.rows * this.size;
+    this.ctx = this.canvas.getContext('2d');
+  }
+  
+  draw(x, y)
+  {
+    this.ctx.moveTo(x * this.size, y * this.size);
+    this.ctx.strokeRect(x * this.size, y * this.size, x * this.size + this.size, y * this.size + this.size);
+  }
+  
+  checkTouch<span class="fstat-no" title="function not covered" >(event) {</span>
+<span class="cstat-no" title="statement not covered" >    return (event.changedTouches) ? event.changedTouches[0] : event;</span>
+  }
+  
+  startRotate<span class="fstat-no" title="function not covered" >(event)</span>
+  {
+<span class="cstat-no" title="statement not covered" >    if (event.target === this.canvas)</span>
+    {
+<span class="cstat-no" title="statement not covered" >      event.preventDefault();</span>
+<span class="cstat-no" title="statement not covered" >      startX = this.checkTouch(event).pageX - this.offsetX;</span>
+<span class="cstat-no" title="statement not covered" >      startY = this.checkTouch(event).pageY - this.offsetY;</span>
+<span class="cstat-no" title="statement not covered" >      document.documentElement.setAttribute('data-dragging', '');</span>
+    }
+  }
+  
+  stopRotate<span class="fstat-no" title="function not covered" >(event)</span>
+  {
+<span class="cstat-no" title="statement not covered" >    if (startX || startY)</span>
+    {
+<span class="cstat-no" title="statement not covered" >      event.preventDefault();</span>
+<span class="cstat-no" title="statement not covered" >      startX = null;</span>
+<span class="cstat-no" title="statement not covered" >      startY = null;</span>
+<span class="cstat-no" title="statement not covered" >      document.documentElement.removeAttribute('data-dragging');</span>
+    }
+  }
+  
+  rotate<span class="fstat-no" title="function not covered" >(event)</span>
+  {
+<span class="cstat-no" title="statement not covered" >    if(startX &amp;&amp; startY)</span>
+    {
+<span class="cstat-no" title="statement not covered" >      event.preventDefault();</span>
+<span class="cstat-no" title="statement not covered" >      this.offsetX = this.clamp((this.checkTouch(event).pageX - startX), 60);</span>
+<span class="cstat-no" title="statement not covered" >      this.offsetY = this.clamp((this.checkTouch(event).pageY - startY), 60, 0);</span>
+<span class="cstat-no" title="statement not covered" >      this.canvas.parentNode.style.transform = `perspective(1000px) rotateX(${this.offsetY}deg) rotateZ(${this.offsetX}deg)`;</span>
+    }
+  }
+  
+  clamp<span class="fstat-no" title="function not covered" >(value, max = 60, min = 60)</span>
+  {
+<span class="cstat-no" title="statement not covered" >    if (value &gt; max) {</span>
+<span class="cstat-no" title="statement not covered" >      return max;</span>
+    } else <span class="cstat-no" title="statement not covered" >if (value &lt; -min) {</span>
+<span class="cstat-no" title="statement not covered" >      return -(min);</span>
+    } else {
+<span class="cstat-no" title="statement not covered" >      return value;</span>
+    }
+  }
+  
+  listen<span class="fstat-no" title="function not covered" >()</span>
+  {
+<span class="cstat-no" title="statement not covered" >    document.addEventListener('mousedown', this.startRotate.bind(this));</span>
+<span class="cstat-no" title="statement not covered" >    document.addEventListener('mousemove', this.rotate.bind(this));</span>
+<span class="cstat-no" title="statement not covered" >    document.addEventListener('mouseup', this.stopRotate.bind(this));</span>
+    
+<span class="cstat-no" title="statement not covered" >    document.addEventListener('touchstart', this.startRotate.bind(this));</span>
+<span class="cstat-no" title="statement not covered" >    document.addEventListener('touchmove', this.rotate.bind(this));</span>
+<span class="cstat-no" title="statement not covered" >    document.addEventListener('touchend', this.stopRotate.bind(this));</span>
+  }
+  
+}
+&nbsp;</pre></td></tr>
+</table></pre>
+
+</div>
+<div class="footer">
+    <div class="meta">Generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Wed May 13 2015 16:40:36 GMT+0200 (South Africa Standard Time)</div>
+</div>
+<script src="../../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../../sorter.js"></script>
+</body>
+</html>

@@ -1,0 +1,721 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>PhantomJS 1.9.8 (Windows 8)</title>
+<style>
+body { background-color: #eeeeee; padding: 0; margin: 5px; overflow-y: scroll; }
+#HTMLReporter h1 { font-size: 12px; font-weight: normal; text-align: right; margin: 10px 0 10px 0 !important; }
+#HTMLReporter { font-size: 11px; font-family: Monaco, "Lucida Console", monospace; line-height: 14px; color: #333333; }
+#HTMLReporter a { text-decoration: none; }
+#HTMLReporter a:hover { text-decoration: underline; }
+#HTMLReporter p, #HTMLReporter h1, #HTMLReporter h2, #HTMLReporter h3, #HTMLReporter h4, #HTMLReporter h5, #HTMLReporter h6 { margin: 0; line-height: 14px; }
+#HTMLReporter .banner, #HTMLReporter .symbolSummary, #HTMLReporter .summary, #HTMLReporter .resultMessage, #HTMLReporter .specDetail .description, #HTMLReporter .alert .bar, #HTMLReporter .stackTrace { padding-left: 9px; padding-right: 9px; }
+
+#HTMLReporter #jasmine_content { position: fixed; right: 100%; }
+#HTMLReporter .version { color: #aaaaaa; }
+#HTMLReporter .banner { margin-top: 14px; }
+#HTMLReporter .duration { color: #aaaaaa; float: right; }
+#HTMLReporter .exceptions { color: #fff; float: right; margin-top: 5px; margin-right: 5px; }
+#HTMLReporter .bar { line-height: 28px; font-size: 14px; display: block; color: #eee; }
+#HTMLReporter .runningAlert { background-color: #666666; }
+#HTMLReporter .skippedAlert { background-color: #aaaaaa; }
+#HTMLReporter .skippedAlert:first-child { background-color: #333333; }
+#HTMLReporter .skippedAlert:hover { text-decoration: none; color: white; text-decoration: underline; }
+#HTMLReporter .passingAlert { background-color: #a6b779; }
+#HTMLReporter .passingAlert:first-child { background-color: #5e7d00; }
+#HTMLReporter .failingAlert { background-color: #cf867e; }
+#HTMLReporter .failingAlert:first-child { background-color: #b03911; }
+#HTMLReporter .results { margin-top: 14px; }
+#HTMLReporter #details { display: none; }
+#HTMLReporter .resultsMenu { color: #999; background-color: #fff; }
+
+#HTMLReporter .summaryMenuItem { font-weight: normal; text-decoration: none; margin-right: 5px; color: #333; }
+#HTMLReporter .detailsMenuItem { font-weight: normal; text-decoration: none; margin-left: 5px; color: #999; }
+
+#HTMLReporter.showDetails .summaryMenuItem { color: #999; }
+#HTMLReporter.showDetails .detailsMenuItem { color: #333; }
+#HTMLReporter.showDetails .summaryMenuItem:hover { text-decoration: underline; }
+#HTMLReporter             .detailsMenuItem:hover { text-decoration: underline; }
+
+
+#HTMLReporter.showDetails .summary { display: none; }
+#HTMLReporter.showDetails #details { display: block; }
+#HTMLReporter .summary { margin-top: 14px; margin-bottom: 40px; }
+#HTMLReporter .summary .suite .suite, #HTMLReporter .summary .specSummary { margin-left: 14px; }
+#HTMLReporter .summary .specSummary.passed { color: #5e7d00; }
+#HTMLReporter .summary .specSummary.failed { color: #b03911; }
+#HTMLReporter .summary .specSummary.skipped { color: #ba9d37; }
+#HTMLReporter .description + .suite { margin-top: 0; }
+#HTMLReporter .suite { margin-top: 14px; }
+#HTMLReporter .suite a { color: #333333; }
+#HTMLReporter #details .specDetail { margin-bottom: 28px; }
+#HTMLReporter #details .specDetail .description { display: block; color: white; background-color: #b03911; }
+#HTMLReporter .resultMessage { padding-top: 14px; color: #333333; }
+#HTMLReporter .resultMessage span.result { display: block; }
+#HTMLReporter .stackTrace { margin: 5px 0 0 0; max-height: 224px; overflow: auto; 
+    line-height: 18px; color: #666666; border: 1px solid #ddd; background: white; white-space: pre; }
+
+
+.fold-buttons { float: right; }
+.fold-buttons a { color: #fff; font-size: 12px; }
+.fold-buttons { display: none } 
+#HTMLReporter .br { margin-top: 8px; }
+#HTMLReporter .section-starter { font-size: 14px; line-height: 18px }
+#HTMLReporter .summary-section { 
+  cursor: -webkit-zoom-out; cursor: -moz-zoom-out; cursor: zoom-out; 
+  background: #fafafa; 
+  padding: 10px; 
+  border-bottom: #eaeaea 1px solid; }
+#HTMLReporter .summary-section.folded { 
+  cursor: -webkit-zoom-in; cursor: -moz-zoom-in; cursor: zoom-in; 
+  padding-bottom: 8px;
+}
+#HTMLReporter .summary-section.folded div { display: none }
+#HTMLReporter .summary-section.folded div.section-starter { display: block }
+/*#HTMLReporter .summary-section:hover { background: #e9e9e9; }*/
+#HTMLReporter .summary-section:hover { background: #f5f5f5; }
+#HTMLReporter .summary-section-totals { 
+  font-size: 11px;
+  display: none; 
+  margin-left: 11px; 
+  overflow: hidden; 
+  position: relative;
+  top: -1px; 
+}
+#HTMLReporter .summary-section.folded .summary-section-totals { display: inline; }
+#HTMLReporter .summary-section-total { color: #fff; vertical-align: baseline; padding: 1px 8px; }
+#HTMLReporter .summary-section-total.passed { background: #5e7d00;  }
+#HTMLReporter .summary-section-total.failed { background: #b03911;  }
+#HTMLReporter .summary-section-total.skipped { background: #ba9d37;  }
+
+#HTMLReporter { font-size: 12px; line-height: 18px; } /*larget font-size*/
+
+</style>
+</head>
+
+<body id="HTMLReporter" class="html-reporter">
+<h1>Tested in PhantomJS 1.9.8 (Windows 8) on Fri May 15 2015</h1>
+
+<div class="alert">
+
+
+
+  
+  <span class="passingAlert bar"><span class="fold-buttons"><a href="#" onclick="fold();">Fold</a> | 
+  <a href="#" onclick="unfold();">Unfold</a></span>79 specs, 0 failed, 0 pending</span>
+  
+
+
+</div>
+<div class="results">
+  <div class="summary">
+  
+  
+  
+  
+  
+    <div class="suite passed">
+      <span class="description">Grid</span>
+    
+      <div class="specSummary passed">
+      <span class="description">takes a hash of parameters as an optional constructor argument</span>
+      </div>
+    
+      <div class="specSummary passed">
+      <span class="description">defaults to config file constructor arguments</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">Grid layout</span>
+    
+      <div class="specSummary passed">
+      <span class="description">only works given an existing canvas context</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">Grid createCanvas</span>
+    
+      <div class="specSummary passed">
+      <span class="description">lays out a canvas using the grid's width, height and size constructor arguments</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">Grid checkTouch</span>
+    
+      <div class="specSummary passed">
+      <span class="description">should return the event if no touches are intercepted</span>
+      </div>
+    
+      <div class="specSummary passed">
+      <span class="description">should return the first touch in an array of touches</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">Grid startRotate</span>
+    
+      <div class="specSummary passed">
+      <span class="description">should do nothing if the event's target is not the grid's canvas element</span>
+      </div>
+    
+      <div class="specSummary passed">
+      <span class="description">should otherwise add a dragging data attribute to the document element</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">Grid stopRotate</span>
+    
+      <div class="specSummary passed">
+      <span class="description">should otherwise remove the dragging data attribute from the document element</span>
+      </div>
+    
+      <div class="specSummary passed">
+      <span class="description">should do nothing if either startX or startY is not defined</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">Grid rotate</span>
+    
+      <div class="specSummary passed">
+      <span class="description">should rotate the game board</span>
+      </div>
+    
+      <div class="specSummary passed">
+      <span class="description">should do nothing if either startX or startY is not defined</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">Grid clamp</span>
+    
+      <div class="specSummary passed">
+      <span class="description">should keep a rotation angle clamped between a supplied positive high and negative low integer</span>
+      </div>
+    
+      <div class="specSummary passed">
+      <span class="description">should default to no value, 60 max and 60 min</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">Grid listen</span>
+    
+      <div class="specSummary passed">
+      <span class="description">should not throw</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">Reporter constructor</span>
+    
+      <div class="specSummary passed">
+      <span class="description">takes a DOM string as a compulsory constructor argument</span>
+      </div>
+    
+      <div class="specSummary passed">
+      <span class="description">otherwise throws a non-blocking error to the console</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">Reporter report</span>
+    
+      <div class="specSummary passed">
+      <span class="description">logs coordinates, if any, to the console</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">Reporter listItem</span>
+    
+      <div class="specSummary passed">
+      <span class="description">should append a list item to the reporter's container element</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">Reporter listen</span>
+    
+      <div class="specSummary passed">
+      <span class="description">should not throw</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">Robot</span>
+    
+      <div class="specSummary passed">
+      <span class="description">can be instantiated with arguments that override default settings</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">Robot render</span>
+    
+      <div class="specSummary passed">
+      <span class="description">renders the robot in proximity to the game board</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">Robot animate</span>
+    
+      <div class="specSummary passed">
+      <span class="description">manoeuvres the robot using CSS transforms based on the grid size</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">Robot connectTo</span>
+    
+      <div class="specSummary passed">
+      <span class="description">plugs the robot into the grid</span>
+      </div>
+    
+      <div class="specSummary passed">
+      <span class="description">won't plug into anything that isn't a grid object</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">Robot validateX</span>
+    
+      <div class="specSummary passed">
+      <span class="description">ensures the number is greater than zero and does not exceed the number of columns on the board</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">Robot validateY</span>
+    
+      <div class="specSummary passed">
+      <span class="description">ensures the number is greater than zero and does not exceed the number of rows on the board</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">Robot validateF</span>
+    
+      <div class="specSummary passed">
+      <span class="description">checks the config file for the appropriate heading title and sets rotation accordingly</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">Robot place</span>
+    
+      <div class="specSummary passed">
+      <span class="description">places the robot on the board at the desired coordinates and heading</span>
+      </div>
+    
+      <div class="specSummary passed">
+      <span class="description">uses a default set of coordinates and heading if no position is specified</span>
+      </div>
+    
+      <div class="specSummary passed">
+      <span class="description">will ignore invalid placement</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">Robot move</span>
+    
+      <div class="specSummary passed">
+      <span class="description">should not be allowed if the robot has not been placed</span>
+      </div>
+    
+      <div class="specSummary passed">
+      <span class="description">should validate and change the position of the robot according to the headings configuration</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">Robot clampRotation</span>
+    
+      <div class="specSummary passed">
+      <span class="description">constrains rotation to positive integer values between 0 and 360 degrees</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">Robot rotate</span>
+    
+      <div class="specSummary passed">
+      <span class="description">may not be invoked if the robot has not been placed</span>
+      </div>
+    
+      <div class="specSummary passed">
+      <span class="description">can rotate the robot 90 degrees anticlockwise</span>
+      </div>
+    
+      <div class="specSummary passed">
+      <span class="description">should always reflect a positive integer value for degrees</span>
+      </div>
+    
+      <div class="specSummary passed">
+      <span class="description">can rotate the robot 90 degrees clockwise</span>
+      </div>
+    
+      <div class="specSummary passed">
+      <span class="description">defaults to rotating right</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">Robot left</span>
+    
+      <div class="specSummary passed">
+      <span class="description">should proxy to the rotate function with a `left` argument</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">Robot right</span>
+    
+      <div class="specSummary passed">
+      <span class="description">should proxy to the rotate function with a `right` argument</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">Robot report</span>
+    
+      <div class="specSummary passed">
+      <span class="description">should send an invalidation message if the robot is not on the board</span>
+      </div>
+    
+      <div class="specSummary passed">
+      <span class="description">should otherwise send its coordinates through with a message</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">Robot handleKeypress</span>
+    
+      <div class="specSummary passed">
+      <span class="description">should intercept a keypress and match it with a configured command</span>
+      </div>
+    
+      <div class="specSummary passed">
+      <span class="description">should not be fired if the keypress target is an input</span>
+      </div>
+    
+      <div class="specSummary passed">
+      <span class="description">should not be fired if the robot is already on the move</span>
+      </div>
+    
+      <div class="specSummary passed">
+      <span class="description">should not be fired if no mapping is found for the key</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">Robot handleClick</span>
+    
+      <div class="specSummary passed">
+      <span class="description">should intercept a click and match it with a configured command</span>
+      </div>
+    
+      <div class="specSummary passed">
+      <span class="description">should not be fired if the robot is already on the move</span>
+      </div>
+    
+      <div class="specSummary passed">
+      <span class="description">should not be fired if no mapping is found for the data-action attribute</span>
+      </div>
+    
+      <div class="specSummary passed">
+      <span class="description">should not be fired if the click target does not have a data-action attribute</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">Robot registerCommands</span>
+    
+      <div class="specSummary passed">
+      <span class="description">should cross-reference regex commands with their component functions</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">Robot listen</span>
+    
+      <div class="specSummary passed">
+      <span class="description">should not throw</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">SoundBoard</span>
+    
+      <div class="specSummary passed">
+      <span class="description">takes an optional DOM string toggle element constructor argument</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">SoundBoard play</span>
+    
+      <div class="specSummary passed">
+      <span class="description">takes an optional DOM string toggle element constructor argument</span>
+      </div>
+    
+      <div class="specSummary passed">
+      <span class="description">does not play if the sound is off</span>
+      </div>
+    
+      <div class="specSummary passed">
+      <span class="description">does not play a sound file that is already playing</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">SoundBoard toggleSound</span>
+    
+      <div class="specSummary passed">
+      <span class="description">should toggle the soundOn value</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">SoundBoard reset</span>
+    
+      <div class="specSummary passed">
+      <span class="description">should toggle the soundOn value</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">SoundBoard listen</span>
+    
+      <div class="specSummary passed">
+      <span class="description">should attach event listeners</span>
+      </div>
+    
+      <div class="specSummary passed">
+      <span class="description">should attach a toggle event listener if toggle is enabled</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">SpeechParser</span>
+    
+      <div class="specSummary passed">
+      <span class="description">should be instantiated with a robot instance</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">SpeechParser listen</span>
+    
+      <div class="specSummary passed">
+      <span class="description">should start Mumble</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">TextParser</span>
+    
+      <div class="specSummary passed">
+      <span class="description">should be instantiated with a robot instance</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">TextParser digest</span>
+    
+      <div class="specSummary passed">
+      <span class="description">should set the parsing parameter to true</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">TextParser cancelDigest</span>
+    
+      <div class="specSummary passed">
+      <span class="description">should cancel the interval cycle</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">TextParser tick</span>
+    
+      <div class="specSummary passed">
+      <span class="description">should set the parsing parameter to false if the queue is empty</span>
+      </div>
+    
+      <div class="specSummary passed">
+      <span class="description">should otherwise invole the readLn function and shift the queue</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">TextParser readLn</span>
+    
+      <div class="specSummary passed">
+      <span class="description">should match a single command to a single function</span>
+      </div>
+    
+      <div class="specSummary passed">
+      <span class="description">should throw an error if the appropriate function is not found</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">TextParser enqueue</span>
+    
+      <div class="specSummary passed">
+      <span class="description">should trim and split an input text file into parsable lines</span>
+      </div>
+    
+      <div class="specSummary passed">
+      <span class="description">should invoke a digest cycle</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">TextParser loadFile</span>
+    
+      <div class="specSummary passed">
+      <span class="description">should do nothing if the parser is currently parsing</span>
+      </div>
+    
+      <div class="specSummary passed">
+      <span class="description">should otherwise remove the data-file attribute on the document element</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">TextParser addDropState</span>
+    
+      <div class="specSummary passed">
+      <span class="description">should do nothing if the parser is currently parsing</span>
+      </div>
+    
+      <div class="specSummary passed">
+      <span class="description">should otherwise add a droppable file state to the document element</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">TextParser removeDropState</span>
+    
+      <div class="specSummary passed">
+      <span class="description">should do nothing if the parser is currently parsing</span>
+      </div>
+    
+      <div class="specSummary passed">
+      <span class="description">should otherwise add a droppable file state to the document element</span>
+      </div>
+    
+    </div>
+  
+    <div class="suite passed">
+      <span class="description">TextParser listen</span>
+    
+      <div class="specSummary passed">
+      <span class="description">should not throw</span>
+      </div>
+    
+    </div>
+  
+  
+</div>
+
+<div id="details">
+  
+</div>
+
+<script>
+
+var folded = false;
+
+document.body.onkeypress = function (e) {
+  if (!e || !e.keyCode) return;
+  switch (e.keyCode) {
+    case 102: toggleFold(); break;
+    case 49: showSummary(); break;
+    
+  }
+};
+
+function showSummary() { document.body.className = "html-reporter showSummary"; }
+function showFailures() { document.body.className = "html-reporter showDetails"; }
+
+function toggleSection(el) {
+  el.className = el.className === 'summary-section' ? 'summary-section folded' : 'summary-section';
+}
+
+function toggleFold() { (folded) ? unfold() : fold(); }
+function fold() {
+  var els = document.querySelectorAll('.summary-section');
+  for (var i = 0; i < els.length; i++) {
+    els[i].className = 'summary-section folded';
+  }
+  folded = true;
+}
+function unfold() {
+  var els = document.querySelectorAll('.summary-section');
+  for (var i = 0; i < els.length; i++) {
+    els[i].className = 'summary-section';
+  }
+  folded = false;
+}
+
+</script>
+
+
+</body>
+</html>
+

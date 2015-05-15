@@ -1,0 +1,768 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for test\classes\robot.js</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="../../prettify.css">
+    <link rel="stylesheet" href="../../base.css">
+    <style type='text/css'>
+        div.coverage-summary .sorter {
+            background-image: url(../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class="header high">
+    <h1>Code coverage report for <span class="entity">test\classes\robot.js</span></h1>
+    <h2>
+        Statements: <span class="metric">100% <small>(127 / 127)</small></span> &nbsp;&nbsp;&nbsp;&nbsp;
+        Branches: <span class="metric">100% <small>(4 / 4)</small></span> &nbsp;&nbsp;&nbsp;&nbsp;
+        Functions: <span class="metric">100% <small>(33 / 33)</small></span> &nbsp;&nbsp;&nbsp;&nbsp;
+        Lines: <span class="metric">100% <small>(120 / 120)</small></span> &nbsp;&nbsp;&nbsp;&nbsp;
+        Ignored: <span class="metric">1 branch</span> &nbsp;&nbsp;&nbsp;&nbsp;
+    </h2>
+    <div class="path"><a href="../../index.html">All files</a> &#187; <a href="index.html">test/classes/</a> &#187; robot.js</div>
+</div>
+<div class="body">
+<pre><table class="coverage">
+<tr><td class="line-count">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242</td><td class="line-coverage"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">3</span>
+<span class="cline-any cline-yes">3</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-yes">2</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import config from '../../config/config.json';
+import Robot from '../../javascript/classes/robot';
+import Grid from '../../javascript/classes/grid';
+&nbsp;
+describe('Robot', ()=&gt; {
+  
+  it('can be instantiated with arguments that override default settings', ()=&gt; {
+    
+    let robot = new Robot();
+    let roomba = new Robot({ name : 'Roomba' });
+    
+    expect(robot.name).toBe('Robot');
+    expect(roomba.name).toBe('Roomba');
+    
+  });
+  
+  describe('render', ()=&gt; {
+    
+    let grid = new Grid();
+    let robot = new Robot();
+    
+    robot.connectTo(grid);
+    
+    it('renders the robot in proximity to the game board', ()=&gt; {
+      robot.render();
+      expect(document.getElementById('robot') instanceof Node).toBeTruthy();
+    });
+    
+  });
+  
+  describe('animate', ()=&gt; {
+    
+    let grid = new Grid({ size : 10 });
+    let robot = new Robot();
+    
+    robot.connectTo(grid);
+    
+    it('manoeuvres the robot using CSS transforms based on the grid size', ()=&gt; {
+      robot.render();
+      robot.position.a = 0;
+      robot.position.x = 2;
+      robot.position.y = 3;
+      robot.animate();
+      expect(robot.robot.style.transform).toBe('translate3d(20px, -30px, 10px) rotate(0deg)');
+    });
+    
+  });
+  
+  describe('connectTo', ()=&gt; {
+    
+    it('plugs the robot into the grid', ()=&gt; {
+      
+      let grid = new Grid();
+      let robot = new Robot();
+      
+      robot.connectTo(grid);
+      expect(robot.grid instanceof Grid).toBeTruthy();
+      
+    });
+    
+    it('won\'t plug into anything that isn\'t a grid object', ()=&gt; {
+      
+      let grid = 'not grid';
+      let robot = new Robot();
+      
+      expect(()=&gt; {
+        robot.connectTo(grid);
+      }).toThrow();
+      
+    });
+    
+  });
+  
+  describe('validateX', ()=&gt; {
+    
+    let grid = new Grid({ columns : 3, rows : 3 });
+    let robot = new Robot();
+    
+    robot.connectTo(grid);
+    
+    it('ensures the number is greater than zero and does not exceed the number of columns on the board', ()=&gt; {
+      
+      expect(robot.validateX(-1)).toBeFalsy();
+      expect(robot.validateX(4)).toBeFalsy();
+      expect(robot.validateX(2)).toBeTruthy();
+      
+    });
+    
+  });
+  
+  describe('validateY', ()=&gt; {
+    
+    let grid = new Grid({ columns : 3, rows : 3 });
+    let robot = new Robot();
+    
+    robot.connectTo(grid);
+    
+    it('ensures the number is greater than zero and does not exceed the number of rows on the board', ()=&gt; {
+      
+      expect(robot.validateY(-1)).toBeFalsy();
+      expect(robot.validateY(4)).toBeFalsy();
+      expect(robot.validateY(2)).toBeTruthy();
+      
+    });
+    
+  });
+  
+  describe('validateF', ()=&gt; {
+    
+    let robot = new Robot();
+    
+    it('checks the config file for the appropriate heading title and sets rotation accordingly', ()=&gt; {
+      
+      expect(robot.validateF('OTHER')).toBeFalsy();
+      expect(robot.validateF('NORTH')).toBeTruthy();
+      
+    });
+    
+  });
+  
+  describe('place', ()=&gt; {
+    
+    var grid = new Grid({ columns : 3, rows : 3 });
+    var robot = new Robot();
+    
+    robot.connectTo(grid);
+    
+    beforeEach(function() {
+      spyOn(Robot.prototype, 'render').and.stub();
+      spyOn(Robot.prototype, 'animate').and.stub();
+    });
+    
+    it('places the robot on the board at the desired coordinates and heading', ()=&gt; {
+      
+      robot.place(2,2,'EAST');
+      
+      expect(robot.placed).toBeTruthy();
+      expect(robot.position.x).toBe(2);
+      expect(robot.position.y).toBe(2);
+      expect(robot.position.f).toBe('EAST');
+      expect(robot.render).toHaveBeenCalled();
+      expect(robot.animate).toHaveBeenCalled();
+      
+    });
+    
+    it('uses a default set of coordinates and heading if no position is specified', ()=&gt; {
+      
+      robot.place();
+      
+      expect(robot.position.x).toBe(0);
+      expect(robot.position.y).toBe(0);
+      expect(robot.position.f).toBe('NORTH');
+      
+    });
+    
+    it('will ignore invalid placement', ()=&gt; {
+      
+      robot.place(6,6,'OTHER');
+      
+      expect(robot.placed).toBeTruthy();
+      expect(robot.position.x).toBe(0);
+      expect(robot.position.y).toBe(0);
+      expect(robot.position.f).toBe('NORTH');
+      
+    });
+    
+  });
+  
+  describe('move', ()=&gt; {
+    
+    beforeEach(()=&gt; {
+      spyOn(Robot.prototype, 'validateX').and.callThrough();
+      spyOn(Robot.prototype, 'validateY').and.callThrough();
+      spyOn(Robot.prototype, 'animate').and.stub();
+    });
+    
+    let grid = new Grid();
+    let robot = new Robot();
+    
+    robot.connectTo(grid);
+    
+    it('should not be allowed if the robot has not been placed', ()=&gt; {
+      expect(()=&gt; {
+        robot.move();
+      }).toThrow();
+    });
+    
+    it('should validate and change the position of the robot according to the headings configuration', ()=&gt; {
+      robot.placed = true;
+      robot.position.f = 'WEST';
+      robot.move();
+      expect(Robot.prototype.validateX).toHaveBeenCalled();
+      expect(Robot.prototype.validateY).toHaveBeenCalled();
+      expect(Robot.prototype.animate).toHaveBeenCalled();
+      robot.position.f = 'SOUTH';
+      robot.move();
+      expect(Robot.prototype.validateX).toHaveBeenCalled();
+      expect(Robot.prototype.validateY).toHaveBeenCalled();
+      expect(Robot.prototype.animate).toHaveBeenCalled();
+      robot.position.f = 'EAST';
+      robot.move();
+      expect(Robot.prototype.validateX).toHaveBeenCalled();
+      expect(Robot.prototype.validateY).toHaveBeenCalled();
+      expect(Robot.prototype.animate).toHaveBeenCalled();
+    });
+    
+  });
+  
+  describe('rotate', ()=&gt; {
+    
+  });
+  
+  describe('listen', ()=&gt; {
+    
+    let robot = new Robot('Test');    
+    
+    it('should listen to movement events and change its position accordingly', ()=&gt; {
+      spyOn(robot, 'move').and.stub();
+      //let event = new Event('move', { x : 0, y : 0 });
+      //document.dispatchEvent('move');
+      //expect(robot.move).toHaveBeenCalledWith({ x : 0, y : 0 });
+    });
+    
+    it('should listen to rotation events and change its heading accordingly', ()=&gt; {
+      spyOn(robot, 'rotate').and.stub();
+      //let event = new Event('rotate', 90);
+      //document.dispatchEvent('rotate');
+      //expect(robot.move).toHaveBeenCalledWith({ x : 0, y : 0 });
+    });
+    
+  });
+  
+  describe('playSound', ()=&gt; {
+    
+    it('should play a sound on movement and heading change', ()=&gt; {
+      
+    });
+    
+  });
+  
+});
+&nbsp;</pre></td></tr>
+</table></pre>
+
+</div>
+<div class="footer">
+    <div class="meta">Generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Wed May 13 2015 16:40:36 GMT+0200 (South Africa Standard Time)</div>
+</div>
+<script src="../../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../../sorter.js"></script>
+</body>
+</html>
