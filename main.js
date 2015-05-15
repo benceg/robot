@@ -76,7 +76,7 @@
 
 	var _fastclick2 = _interopRequireDefault(_fastclick);
 
-	if (window.location.hostname.indexOf('github.io') > -1 && window.location.window.location.protocol != 'https:') {
+	if (window.location.hostname.indexOf('github.io') > -1 && window.location.protocol !== 'https:') {
 	  window.location.href = 'https:' + window.location.href.substring(window.location.protocol.length);
 	}
 
@@ -108,7 +108,7 @@
 	  robot.listen();
 
 	  textParser.listen();
-	  // speechParser.listen();
+	  speechParser.listen();
 
 	  reporter.listen();
 	  soundBoard.listen();
