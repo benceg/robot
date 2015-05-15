@@ -4,12 +4,25 @@
   left 0
   width 100%
   font-size 0
-  line-height 30px
   user-select none
   text-align center
+  background white
+  overflow hidden
   
-  > span
-    font-size 20px
+  .wrap
+    margin 0 auto
+    width 100%
+    max-width 800px
+  
+  span
     display inline-block
+    font-size 36px
     width 20%
+    line-height 2em
     cursor pointer
+    position relative
+    text-align center
+    color #999
+    
+    @media (max-width 480px)
+      font-size 24px
