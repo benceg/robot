@@ -6,7 +6,7 @@ import TextParser from './classes/text-parser';
 import SpeechParser from './classes/speech-parser';
 import fastClick from 'fastclick';
 
-if (window.location.hostname.indexOf('github.com') > -1 && window.location. window.location.protocol != "https:")
+if (window.location.hostname.indexOf('github.io') > -1 && window.location. window.location.protocol != "https:")
 {
   window.location.href = "https:" + window.location.href.substring(window.location.protocol.length);
 }
