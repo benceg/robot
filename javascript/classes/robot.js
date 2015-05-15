@@ -15,14 +15,15 @@ export default class Robot {
    */
   constructor(args) {
     ObjectAssign(this, config.robot, args);
-    
+    /** @type {Grid} */
+    this.grid = undefined;
     /** @type {boolean} */
     this.placed = false;
     /** @type {boolean} */
     this.moving = false;
-    /** @type {node} */
+    /** @type {HTMLElement} */
     this.robot = null;
-    /** @type {array} */
+    /** @type {Array} */
     this.queue = [];
   }
   

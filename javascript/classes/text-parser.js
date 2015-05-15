@@ -21,11 +21,15 @@ export default class TextParser
       throw new Error('Parser needs to connect to an instantiated robot');
     }
     
+    /** @type {Robot} */
     this.robot = robot;
+    /** @type {Object} */
     this.commands = this.robot.registerCommands();
-    
+    /** @type {Array} */
     this.queue = [];
+    /** @type {boolean} */
     this.parsing = false;
+    /** @type {number} */
     this.interval = null;
   }
   
@@ -63,6 +67,7 @@ export default class TextParser
   
   /**
    * Reads a line and relates it to a command
+   * @param {string} ln - a parsable single line string
    */
   readLn(ln) {
     let args = [];

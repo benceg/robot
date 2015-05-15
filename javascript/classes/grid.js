@@ -19,9 +19,16 @@ export default class Grid
   constructor(args)
   {
     ObjectAssign(this, config.grid, args);
+    /** @type {HTMLElement} */
     this.el = document.querySelector(this.container);
+    /** @type {number} */
     this.offsetX = 0;
+    /** @type {number} */
     this.offsetY = 0;
+    /** @type {HTMLCanvasElement} */
+    this.canvas = undefined;
+    /** @type {CanvasRenderingContext2D} */
+    this.ctx = undefined;
   }
   
   /**

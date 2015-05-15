@@ -21,10 +21,13 @@ export default class SpeechParser
       throw new Error('Parser needs to connect to an instantiated robot');
     }
     
+    /** @type {Robot} */
     this.robot = robot;
     
+    /** @type {Object} */
     this.commands = this.robot.registerCommands();
     
+    /** @type {Mumble} */
     this.mumble = new Mumble({
       language : config.language,
       commands : this.commands

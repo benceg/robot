@@ -9,8 +9,11 @@ export default class SoundBoard {
    */
   constructor(toggles)
   {
+    /** @type {boolean} */
     this.soundOn = true;
+    /** @type {HTMLElement} */
     this.toggles = document.querySelector(toggles);
+    /** @type {Audio} */
     this.audio = new Audio();
   }
   
