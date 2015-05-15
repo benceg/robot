@@ -33,25 +33,24 @@ export default class TextParser
    * Invokes a digest cycle for the interpreter
    */
   digest() {
-    
-    let self = this;
     this.parsing = true;
-    
-    self.interval = setInterval(function() {
-      // Read the queue line for line or cancel
-      // if it reaches zero lines
-      if (self.queue.length)
-      {
-        self.readLn.call(self, self.queue[0]);
-        self.queue.shift();
-      }
-      else
-      {
-        self.parsing = false;
-        clearInterval(self.interval);
-      }
-    }, config.digest);
-    
+    this.interval = setInterval(this.tick.bind(this), config.digest);
+  }
+  
+  /**
+   * Reads the queue line for line or cancels if it reaches zero lines
+   */
+  tick() {
+    if (this.queue.length)
+    {
+      this.readLn.call(this, this.queue[0]);
+      this.queue.shift();
+    }
+    else
+    {
+      this.parsing = false;
+      clearInterval(this.interval);
+    }
   }
   
   /**
@@ -59,6 +58,7 @@ export default class TextParser
    */
   cancelDigest() {
     clearInterval(this.interval);
+    this.interval = null;
   }
   
   /**

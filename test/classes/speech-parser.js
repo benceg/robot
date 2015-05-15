@@ -7,9 +7,7 @@ describe('SpeechParser', ()=> {
   it('should be instantiated with a robot instance', ()=> {
     
     expect(()=> { let speechParser = new SpeechParser() }).toThrow();
-    
     expect(()=> { let speechParser = new SpeechParser('robot') }).toThrow();
-    
     expect(()=> { let robot = new Robot(); let speechParser = new SpeechParser(robot) }).not.toThrow();
     
   });

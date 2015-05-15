@@ -43,6 +43,7 @@
     "phantomjs-polyfill": "0.0.1",
     "raw-loader": "^0.5.1",
     "stylus": "^0.51.1",
-    "webpack": "^1.9.5"
+    "webpack": "^1.9.5",
+    "webpack-dev-server": "^1.8.2"
   }
 }
