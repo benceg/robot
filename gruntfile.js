@@ -24,8 +24,11 @@ module.exports = function(grunt) {
     },
     
     karma : {
-      build : {
-        configFile : "karma.conf.js"
+      dev : {
+        configFile : "karma.dev.conf.js"
+      },
+      ci : {
+        configFile : "karma.ci.conf.js"
       }
     },
     
@@ -151,12 +154,6 @@ module.exports = function(grunt) {
         ]
       }
     },
-    
-    karma : {
-      run : {
-        configFile : 'karma.conf.js'
-      }
-    },
 
     watch: {
       options : {
@@ -193,7 +190,7 @@ module.exports = function(grunt) {
 
   });
   
-  grunt.registerTask("test", ["karma"]);
+  grunt.registerTask("test", ["karma:dev"]);
   grunt.registerTask("document", ["clean"], ["jsdoc"]);
   grunt.registerTask("default", ["connect:dev", "copy:images", "copy:fonts", "copy:sounds", "jade", "stylus", "webpack", "watch"]);
   grunt.registerTask("make", ["copy:images", "copy:fonts", "copy:sounds", "jade", "stylus", "csso", "webpack:build", "uglify"]);
