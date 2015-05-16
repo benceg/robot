@@ -83,15 +83,6 @@ module.exports = function(grunt) {
       }
     },
     
-    jsdoc : {
-      build : {
-        src: ["src/javascript/*.js", "src/javascript/**/*.js", "README.md"], 
-        options: {
-          destination: "documentation"
-        }
-      }
-    },
-    
     jade: {
       build: {
         options: {
@@ -191,7 +182,6 @@ module.exports = function(grunt) {
   });
   
   grunt.registerTask("test", ["karma:dev"]);
-  grunt.registerTask("document", ["clean"], ["jsdoc"]);
   grunt.registerTask("default", ["connect:dev", "copy:images", "copy:fonts", "copy:sounds", "jade", "stylus", "webpack", "watch"]);
   grunt.registerTask("make", ["copy:images", "copy:fonts", "copy:sounds", "jade", "stylus", "csso", "webpack:build", "uglify"]);
 

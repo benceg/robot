@@ -87,7 +87,7 @@ export default class TextParser
       command[0].action.apply(self.robot, args);
     } catch(e) {
       this.queue = [];
-      throw new Error(e.message);
+      throw new Error(`${this.robot.name} does not understand the command ${ln}`);
     }
   }
   
