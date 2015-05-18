@@ -30,7 +30,10 @@ export default class SpeechParser
     /** @type {Mumble} */
     this.mumble = new Mumble({
       language : config.language,
-      commands : this.commands
+      commands : this.commands,
+      continuous : false,
+      debug : false,
+      maxAlternatives : 8
     });
   }
   
@@ -39,7 +42,7 @@ export default class SpeechParser
    */
   listen()
   {
-    this.mumble.start();
+    if (this.mumble.isAvailable) this.mumble.start();
   }
   
 }
