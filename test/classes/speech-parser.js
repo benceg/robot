@@ -14,15 +14,19 @@ describe('SpeechParser', ()=> {
   
   describe('listen', ()=> {
     
-    it('should start Mumble', ()=> {
+    it('should start Mumble if the Web Speech API is supported', ()=> {
       
       let robot = new Robot();
       let speechParser = new SpeechParser(robot);
       
       spyOn(speechParser.mumble, 'start').and.stub();
       
+      speechParser.mumble.isAvailable = false;
       speechParser.listen();
+      expect(speechParser.mumble.start).not.toHaveBeenCalled();
       
+      speechParser.mumble.isAvailable = true;
+      speechParser.listen();
       expect(speechParser.mumble.start).toHaveBeenCalled();
       
     });
