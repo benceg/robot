@@ -1104,7 +1104,10 @@
 	    /** @type {Mumble} */
 	    this.mumble = new _mumbleJs2['default']({
 	      language: _configConfigJson2['default'].language,
-	      commands: this.commands
+	      commands: this.commands,
+	      continuous: false,
+	      debug: false,
+	      maxAlternatives: 8
 	    });
 	  }
 
@@ -1115,7 +1118,7 @@
 	     * Invokes Mumble's listening cycle
 	     */
 	    value: function listen() {
-	      this.mumble.start();
+	      if (this.mumble.isAvailable) this.mumble.start();
 	    }
 	  }]);
 
