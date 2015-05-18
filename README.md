@@ -19,13 +19,15 @@ Took about 16-20 hours total to finish this (including build & testing scripts, 
 
 ### Instructions
 
-- Challen instructions are at https://goo.gl/dxJPYx.
+- Challenge instructions are at https://goo.gl/dxJPYx.
 - Drag the board to rotate it.
 - Use the arrow keys to move the Roomba.
 	- Hit `<return>` to receive a report, and `<space>` to place it.
 - Speak into your microphone to move the Roomba.
 	- Use the instruction sets detailed in the document above, with one exception...
 	- To place the Roomba, you'll need to yell `Place X<x>, Y<y>, <direction>`, e.g. `Place X1, Y2, South`. This is because the Web Speech API construes concatenated digits as a single number (e.g. `1 2` = `12`). Unfortunately this cannot be surmounted in the API's current state.
+	- Use headphones for best effect, especially if your device has speakers in close proximity with its microphone (e.g. a mobile device). If you do not have a pair of headphones on hand, reduce the volume of the game to prevent the microphone from picking it up.
+	- It's also strongly recommended that you use a directional microphone in noisy environments.
 - Drag & drop instruction sets formatted as they are in the document above, to have them read to the Roomba.
 	- There is a set of demo instructions at `./demo/instructions.txt`.
 - Use this on your mobile! Note that it will only work in portrait mode, given `<canvas>`'s lack of viewport respect and vice versa. Note that it should run at around 60FPS, even on a second generation iPad.
