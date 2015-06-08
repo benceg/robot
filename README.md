@@ -79,6 +79,7 @@ Took about 16-20 hours total to finish this (including build & testing scripts, 
 	- The imperative model was favoured over a fully evented model given the messiness of having to generate multiple event namespace GUIDs, and the lack of testability within the evented model, as well as inconsistent browser support for `Event` and `CustomEvent` constructors, which would have led to an inscrutable codebase.
 	- Custom events are launched from the document element and fed into the Reporter and Sound Board modules, meaning any action can fire a sound or a report if needed.
 	- A little native functional programming (`Array.map, Array.filter, Object.assign`, etc) has been employed to translate configuration scripts to real live actions accomplishable by the Robot module.
+- Uses `Object.freeze` to make the configuration object effectively immutable.
 - Takes advantage of the ECMAScript 2015 `class` syntactic sugar, but could just as easily have been written using standard ECMAScript 5 modular or prototypal inheritance models. The codebase is completely future-proof as it currently stands, and transpiles to browser-legible ES 5.
 
 #### HTML 5 APIs and Features
